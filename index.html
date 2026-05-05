@@ -1,0 +1,1008 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#0b0f17" />
+<title>Cadence</title>
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          bg: '#0b0f17', surface: '#111827', card: '#0f172a',
+          ink: '#e5e7eb', mute: '#94a3b8', accent: '#22d3ee', warn: '#f59e0b', danger: '#ef4444', ok: '#10b981'
+        }
+      }
+    }
+  };
+</script>
+<style>
+  html, body { background:#0b0f17; color:#e5e7eb; -webkit-tap-highlight-color: transparent; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif; padding-bottom: env(safe-area-inset-bottom); }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+  .check { transition: transform 80ms ease; }
+  .check:active { transform: scale(0.92); }
+  .row-press { user-select: none; -webkit-user-select: none; }
+  @keyframes fadein { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform:none; } }
+  .fadein { animation: fadein 140ms ease both; }
+  .pill { font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ========================================================================
+     FIREBASE CONFIG — fill these in for sync. With placeholders, the app
+     runs in local-only mode (everything still works; nothing leaves device).
+     ======================================================================== -->
+<script>
+  window.__CADENCE_FIREBASE__ = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+</script>
+
+<div id="app" class="max-w-md mx-auto px-4 pt-6"></div>
+
+<script type="module">
+//=============================================================================
+// Cadence v1 — single-file PWA. PRD: cadence-prd.md
+//=============================================================================
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, writeBatch, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
+//-----------------------------------------------------------------------------
+// Constants — see PRD §5, §6, §8
+//-----------------------------------------------------------------------------
+
+const PHASES = {
+  0: { label: "Phase 0 — Preserve & Rehab", short: "Phase 0",
+       weekly: "3 light resistance + 2 recovery", volume: [10,12], deloadAllowed: true },
+  1: { label: "Phase 1 — Rebuild", short: "Phase 1",
+       weekly: "3 modified resistance + 2 recovery", volume: [14,18], deloadAllowed: true },
+  2: { label: "Phase 2 — Recomp", short: "Phase 2",
+       weekly: "5 resistance, mobility in warmups", volume: [16,20], deloadAllowed: true }
+};
+
+// JS getDay(): 0=Sun, 1=Mon, ... 6=Sat
+const DAY_TABLE = {
+  0: { 1: "light_lower", 2: "recovery", 3: "posterior_scap", 4: "recovery", 5: "light_lower_push", 6: "off", 0: "off" },
+  1: { 1: "lower", 2: "push_modified", 3: "recovery", 4: "pull_modified", 5: "full_body", 6: "off", 0: "off" },
+  2: { 1: "push", 2: "pull", 3: "legs", 4: "upper", 5: "lower", 6: "off", 0: "off" }
+};
+
+const CARD_META = {
+  light_lower:       { title: "Light Lower",        duration: 35, kind: "resistance" },
+  posterior_scap:    { title: "Posterior + Scap",   duration: 40, kind: "resistance" },
+  light_lower_push:  { title: "Light Lower + Push", duration: 40, kind: "resistance" },
+  recovery:          { title: "Recovery",           duration: 25, kind: "recovery" },
+  lower:             { title: "Lower",              duration: 50, kind: "resistance" },
+  push_modified:     { title: "Push (modified)",    duration: 50, kind: "resistance" },
+  pull_modified:     { title: "Pull (modified)",    duration: 50, kind: "resistance" },
+  full_body:         { title: "Full Body",          duration: 55, kind: "resistance" },
+  push:              { title: "Push",               duration: 60, kind: "resistance" },
+  pull:              { title: "Pull",               duration: 60, kind: "resistance" },
+  legs:              { title: "Legs",               duration: 60, kind: "resistance" },
+  upper:             { title: "Upper",              duration: 55, kind: "resistance" },
+  off:               { title: "Off Day",            duration: 0,  kind: "off" }
+};
+
+// Card type → category targets (count of exercise slots from each category, in order)
+// Compound-first ordering by how slots are listed.
+const CARD_RECIPES = {
+  light_lower:       [["quad_dominant", 2, { exclude: ["bilateral_squat_heavy"] }], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}]],
+  light_lower_push:  [["quad_dominant", 2, {}], ["hinge_posterior", 1, {}], ["scap_postural", 2, {}], ["calf_lower_leg", 1, {}]],
+  posterior_scap:    [["scap_postural", 4, {}], ["horizontal_pull", 1, {}], ["physio_specific", 1, {}]],
+  recovery:          [["recovery_mobility", 4, {}], ["physio_specific", 2, {}]],
+
+  lower:             [["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  push_modified:     [["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["arms_isolation", 2, { filter: "tricep" }]],
+  pull_modified:     [["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["arms_isolation", 2, { filter: "bicep" }]],
+  full_body:         [["quad_dominant", 1, {}], ["hinge_posterior", 1, {}], ["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["scap_postural", 1, {}], ["core", 1, {}]],
+
+  push:              [["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["horizontal_push", 1, { isolation: true }], ["arms_isolation", 2, { filter: "tricep" }]],
+  pull:              [["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 2, { filter: "bicep" }]],
+  legs:              [["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["quad_dominant", 1, { isolation: true }], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  upper:             [["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["vertical_push", 1, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 1, {}]]
+};
+
+const RECOVERY_BLOCK = [
+  { id: "_rec_foamroll", name: "Foam roll: thoracic, lats, glutes", durationMin: 8, kind: "recovery" },
+  { id: "_rec_ice",      name: "Ice / contrast: shoulder + ankle",  durationMin: 10, kind: "recovery" }
+];
+
+const DEFAULT_CONTRAINDICATIONS = ["right_anterior_shoulder", "right_medial_ankle"];
+const DEFAULT_EQUIPMENT = ["adjustable_dumbbells","barbell_plates","adjustable_bench","pull_up_bar","resistance_bands","cable_machine","foam_roller","yoga_mat","bodyweight"];
+
+//-----------------------------------------------------------------------------
+// Storage (local mirror) + Firestore client
+//-----------------------------------------------------------------------------
+
+const LS_KEY = "cadence:v1";
+const LS = {
+  load() { try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; } },
+  save(s) { localStorage.setItem(LS_KEY, JSON.stringify(s)); }
+};
+
+let fbReady = false, fbApp = null, fbAuth = null, fbDb = null, fbUid = null;
+
+function fbConfigured() {
+  const c = window.__CADENCE_FIREBASE__ || {};
+  return !!(c.apiKey && !c.apiKey.startsWith("YOUR_") && c.projectId && !c.projectId.startsWith("YOUR_"));
+}
+
+async function initFirebase() {
+  if (!fbConfigured()) { console.info("[Cadence] No Firebase config — running local-only."); return; }
+  try {
+    fbApp = initializeApp(window.__CADENCE_FIREBASE__);
+    fbAuth = getAuth(fbApp); fbDb = getFirestore(fbApp);
+    await new Promise((res, rej) => {
+      const unsub = onAuthStateChanged(fbAuth, async (u) => {
+        if (u) { fbUid = u.uid; unsub(); fbReady = true; res(); }
+      });
+      signInAnonymously(fbAuth).catch(rej);
+    });
+  } catch (e) { console.warn("[Cadence] Firebase init failed; local-only.", e); fbReady = false; }
+}
+
+//-----------------------------------------------------------------------------
+// Seeding (PRD §17.2 — embed JSON, write on first launch)
+//-----------------------------------------------------------------------------
+
+let EXERCISES = []; // canonical in-memory pool
+
+async function loadExerciseSeed() {
+  const res = await fetch("/exercise-seed.json", { cache: "force-cache" });
+  const json = await res.json();
+  return json.exercises || [];
+}
+
+async function seedFirestoreIfNeeded(seed) {
+  if (!fbReady) return;
+  const meta = await getDoc(doc(fbDb, "system", "seed"));
+  if (meta.exists() && meta.data().version === "1.0") return;
+  // Batch write all exercises
+  const chunks = [];
+  for (let i = 0; i < seed.length; i += 400) chunks.push(seed.slice(i, i + 400));
+  for (const chunk of chunks) {
+    const batch = writeBatch(fbDb);
+    chunk.forEach(ex => batch.set(doc(fbDb, "exercises", ex.id), ex));
+    await batch.commit();
+  }
+  await setDoc(doc(fbDb, "system", "seed"), { version: "1.0", seededAt: serverTimestamp(), count: seed.length });
+  console.info(`[Cadence] Seeded ${seed.length} exercises to Firestore.`);
+}
+
+//-----------------------------------------------------------------------------
+// User state — single source of truth, persisted to LS, mirrored to Firestore
+//-----------------------------------------------------------------------------
+
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+const DEFAULT_STATE = () => ({
+  setupDone: false,
+  profile: {
+    goal: "recomp",
+    phase: 0,
+    frequency: 5,
+    sessionLength: 45,
+    equipment: [...DEFAULT_EQUIPMENT],
+    contraindications: [...DEFAULT_CONTRAINDICATIONS]
+  },
+  mesocycle: { startDate: todayISO(), currentWeek: 1 }, // week 1..5; 5 = deload
+  daySkew: 0, // increments on "Not today" — shifts split sequence
+  sessions: {}, // sessionId → session record (also synced)
+  exerciseHistory: {}, // exerciseId → { lastDate, lastLoad, lastReps, symptomFlagCount, lastCardType }
+  updatedAt: 0
+});
+
+let STATE = LS.load();
+if (!STATE || !STATE.profile) STATE = DEFAULT_STATE();
+
+function saveState({ remote = true } = {}) {
+  STATE.updatedAt = Date.now();
+  LS.save(STATE);
+  if (remote && fbReady && fbUid) {
+    setDoc(doc(fbDb, "users", fbUid), {
+      profile: STATE.profile,
+      mesocycle: STATE.mesocycle,
+      daySkew: STATE.daySkew,
+      setupDone: STATE.setupDone,
+      exerciseHistory: STATE.exerciseHistory,
+      updatedAt: STATE.updatedAt
+    }, { merge: true }).catch(e => console.warn("[Cadence] sync user failed", e));
+  }
+}
+
+async function pullRemoteState() {
+  if (!fbReady || !fbUid) return;
+  try {
+    const snap = await getDoc(doc(fbDb, "users", fbUid));
+    if (!snap.exists()) return;
+    const remote = snap.data();
+    if ((remote.updatedAt || 0) > (STATE.updatedAt || 0)) {
+      // Last-write-wins (PRD §16)
+      STATE = { ...STATE, ...remote, sessions: STATE.sessions || {} };
+      LS.save(STATE);
+    }
+    // Pull recent sessions
+    const sessSnap = await getDocs(collection(fbDb, "sessions", fbUid, "items"));
+    sessSnap.forEach(d => { const s = d.data(); STATE.sessions[d.id] = s; });
+    LS.save(STATE);
+  } catch (e) { console.warn("[Cadence] pullRemoteState", e); }
+}
+
+async function syncSession(session) {
+  if (!fbReady || !fbUid) return;
+  try {
+    await setDoc(doc(fbDb, "sessions", fbUid, "items", session.id), session);
+  } catch (e) { console.warn("[Cadence] syncSession", e); }
+}
+
+//-----------------------------------------------------------------------------
+// Mesocycle bookkeeping
+//-----------------------------------------------------------------------------
+
+function refreshMesocycleWeek() {
+  const start = new Date(STATE.mesocycle.startDate + "T00:00:00");
+  const days = Math.floor((Date.now() - start.getTime()) / 86400000);
+  const week = ((Math.floor(days / 7)) % 5) + 1; // 1..5
+  if (week !== STATE.mesocycle.currentWeek) {
+    STATE.mesocycle.currentWeek = week;
+    saveState();
+  }
+}
+
+const isDeloadWeek = () => STATE.mesocycle.currentWeek === 5;
+
+//-----------------------------------------------------------------------------
+// THE ENGINE — PRD §8
+//-----------------------------------------------------------------------------
+
+function dayCardType(date = new Date()) {
+  const phase = STATE.profile.phase;
+  const dow = date.getDay();
+  // Apply daySkew (positive = shift forward)
+  const skew = STATE.daySkew || 0;
+  const effective = ((dow - 1 + skew) % 7 + 7) % 7 + 1; // re-bias so Mon=1
+  const map = DAY_TABLE[phase];
+  // map keys are 0..6; we re-assemble using the skewed dow
+  const realDow = (dow + skew) % 7;
+  return map[realDow] || "off";
+}
+
+// 1. Filter pool by phase / equipment / contraindications / rotation
+function filterPool(cardType, opts = {}) {
+  const phase = STATE.profile.phase;
+  const equip = new Set(STATE.profile.equipment);
+  const contras = new Set(STATE.profile.contraindications);
+  const recentlyUsed = recentExerciseIds(cardType, 2);
+
+  return EXERCISES.filter(ex => {
+    if (!ex.phase_eligibility?.includes(phase)) return false;
+    if (!ex.equipment_required?.every(e => equip.has(e))) return false;
+    if (ex.contraindication_tags?.some(t => contras.has(t))) return false;
+    if (opts.excludeIds && opts.excludeIds.has(ex.id)) return false;
+    if (recentlyUsed.has(ex.id) && !opts.allowRecent) return false;
+    return true;
+  });
+}
+
+function recentExerciseIds(cardType, lastN) {
+  const sessions = Object.values(STATE.sessions)
+    .filter(s => s.cardType === cardType && s.completedAt)
+    .sort((a, b) => (b.completedAt || 0) - (a.completedAt || 0))
+    .slice(0, lastN);
+  const ids = new Set();
+  sessions.forEach(s => (s.planned || []).forEach(p => ids.add(p.exerciseId)));
+  return ids;
+}
+
+// 2. Selection — compound first, prefer not-recently-used, low-fatigue tiebreak
+function selectFromCategory(pool, category, count, opts = {}) {
+  let candidates = pool.filter(ex => ex.category === category);
+  if (opts.filter === "tricep") candidates = candidates.filter(ex => /tricep|pushdown|skull|overhead/i.test(ex.name) || ex.primary_movers?.includes("triceps"));
+  if (opts.filter === "bicep")  candidates = candidates.filter(ex => /curl/i.test(ex.name) || ex.primary_movers?.includes("biceps"));
+  if (opts.isolation) candidates = candidates.filter(ex => ex.fatigue_cost === "low" || /fly|extension|curl|raise|pushdown/i.test(ex.name));
+  // compound-first sort: high → medium → low fatigue (compound proxy), then lower fatigue (less drain) — but PRD §8.4 says compound first overall.
+  // We sort compound-first within categories that mix; ordering across categories is preserved by recipe slot order.
+  candidates.sort((a, b) => fatigueRank(b) - fatigueRank(a)); // compounds first
+  // Pick up to count, avoiding duplicates
+  const picked = [];
+  const seen = new Set();
+  for (const ex of candidates) {
+    if (picked.length >= count) break;
+    if (seen.has(ex.id)) continue;
+    picked.push(ex); seen.add(ex.id);
+  }
+  return picked;
+}
+
+function fatigueRank(ex) { return ({ high: 3, medium: 2, low: 1 })[ex.fatigue_cost] || 1; }
+
+// 3. Sets per exercise
+function setsForExercise(ex, cardType) {
+  const phase = STATE.profile.phase;
+  const isResistance = CARD_META[cardType]?.kind === "resistance";
+  if (!isResistance) return ex.durationMin ? 1 : 1;
+  let base = phase === 0 ? 3 : phase === 1 ? 3 : 4;
+  if (ex.fatigue_cost === "low") base = Math.max(2, base - 1);
+  if (isDeloadWeek()) base = Math.max(2, Math.round(base * 0.6));
+  return base;
+}
+
+// 4. Load prescription — PRD §8.5
+function prescribeLoad(ex) {
+  const hist = STATE.exerciseHistory[ex.id];
+  const repRange = ex.rep_ranges?.[`phase_${STATE.profile.phase}`] || [8,12];
+  if (!hist || hist.lastLoad == null) return { load: null, reps: repRange, note: "No history" };
+  const compound = ex.fatigue_cost === "high" || ex.fatigue_cost === "medium";
+  let load = hist.lastLoad;
+  let note = "Hold";
+
+  if ((hist.symptomFlagCount || 0) >= 2) return { load, reps: repRange, note: "Substitute due to repeated symptom", substitute: true };
+  if (hist.lastSymptomFlag) { note = "Hold (symptom last session)"; }
+  else if (hist.lastReps != null && hist.lastReps >= repRange[1]) {
+    load += compound ? 2.5 : 1;
+    note = compound ? "+2.5 kg" : "+1 kg";
+  }
+  if (isDeloadWeek()) { load = Math.round(load * 0.7 * 2) / 2; note = "Deload (×0.7)"; }
+  return { load, reps: repRange, note };
+}
+
+// 5. Generate today's session
+function generateSession(date = new Date()) {
+  refreshMesocycleWeek();
+  const cardType = dayCardType(date);
+  const meta = CARD_META[cardType];
+  if (!meta || meta.kind === "off") {
+    return { id: sessionIdFor(date), date: date.toISOString().slice(0,10), cardType, planned: [], recovery: [], meta };
+  }
+
+  const recipe = CARD_RECIPES[cardType] || [];
+  const pool = filterPool(cardType);
+  const planned = [];
+  const usedIds = new Set();
+
+  for (const [category, count, opts] of recipe) {
+    const remaining = pool.filter(ex => !usedIds.has(ex.id));
+    const picks = selectFromCategory(remaining, category, count, opts);
+    for (const ex of picks) {
+      usedIds.add(ex.id);
+      const sets = setsForExercise(ex, cardType);
+      const rx = prescribeLoad(ex);
+      planned.push({
+        exerciseId: ex.id, name: ex.name, category: ex.category,
+        sets: Array.from({ length: sets }, () => ({ reps: null, load: rx.load, completed: false })),
+        repRange: rx.reps, prescribedLoad: rx.load, prescribedNote: rx.note,
+        rest_seconds: ex.rest_seconds, isPhysio: ex.is_physio || false, notes: ex.notes || ""
+      });
+    }
+  }
+
+  // Mandatory recovery block (PRD §6) — Phase 0/1 resistance days
+  const recovery = (STATE.profile.phase < 2 && meta.kind === "resistance")
+    ? RECOVERY_BLOCK.map(b => ({ ...b, completed: false }))
+    : (cardType === "recovery" ? RECOVERY_BLOCK.map(b => ({ ...b, completed: false })) : []);
+
+  return {
+    id: sessionIdFor(date),
+    date: date.toISOString().slice(0,10),
+    cardType, meta,
+    deload: isDeloadWeek(),
+    planned, recovery,
+    startedAt: null, completedAt: null,
+    sessionSymptomFlag: null
+  };
+}
+
+const sessionIdFor = (date) => "s_" + date.toISOString().slice(0,10);
+
+//-----------------------------------------------------------------------------
+// Router (hash-based)
+//-----------------------------------------------------------------------------
+
+const root = document.getElementById("app");
+const screens = { setup: SetupScreen, today: TodayScreen, session: SessionScreen, done: DoneScreen, settings: SettingsScreen };
+
+function navigate(name, params = {}) {
+  location.hash = "#" + name + (params._id ? ":" + params._id : "");
+  render();
+}
+
+function currentRoute() {
+  const h = (location.hash || "#today").slice(1);
+  const [name, id] = h.split(":");
+  return { name, id };
+}
+
+function render() {
+  if (!STATE.setupDone) { mount(SetupScreen); return; }
+  const { name } = currentRoute();
+  const view = screens[name] || TodayScreen;
+  mount(view);
+}
+
+function mount(view) {
+  root.innerHTML = "";
+  const node = view();
+  node.classList.add("fadein");
+  root.appendChild(node);
+}
+
+window.addEventListener("hashchange", render);
+
+//-----------------------------------------------------------------------------
+// UI helpers
+//-----------------------------------------------------------------------------
+
+function el(tag, attrs = {}, children = []) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v;
+    else if (k === "html") n.innerHTML = v;
+    else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === "style" && typeof v === "object") Object.assign(n.style, v);
+    else n.setAttribute(k, v);
+  }
+  (Array.isArray(children) ? children : [children]).filter(Boolean).forEach(c => n.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+  return n;
+}
+
+function header(title, rightBtn) {
+  return el("header", { class: "flex items-center justify-between mb-5" }, [
+    el("h1", { class: "text-2xl font-semibold tracking-tight" }, [title]),
+    rightBtn || el("div")
+  ]);
+}
+
+function iconBtn(label, onClick) {
+  return el("button", { class: "text-mute hover:text-ink p-2 rounded-lg", onClick }, [label]);
+}
+
+function pill(text, klass = "bg-slate-700 text-slate-200") {
+  return el("span", { class: `pill ${klass}` }, [text]);
+}
+
+//-----------------------------------------------------------------------------
+// Setup screen — PRD §7 Flow B — ≤60 sec
+//-----------------------------------------------------------------------------
+
+function SetupScreen() {
+  let step = 0;
+  const draft = {
+    goal: STATE.profile.goal,
+    phase: STATE.profile.phase,
+    frequency: STATE.profile.frequency,
+    sessionLength: STATE.profile.sessionLength,
+    equipment: new Set(STATE.profile.equipment),
+    contraindications: new Set(STATE.profile.contraindications)
+  };
+
+  const wrap = el("div");
+  function paint() {
+    wrap.innerHTML = "";
+    wrap.appendChild(header("Setup", el("span", { class: "text-mute text-sm" }, [`${step+1}/3`])));
+
+    if (step === 0) {
+      wrap.appendChild(el("div", { class: "space-y-5" }, [
+        el("div", {}, [
+          el("label", { class: "block text-sm text-mute mb-2" }, ["Goal"]),
+          radioGroup(["recomp","preserve","rebuild"], draft.goal, v => draft.goal = v)
+        ]),
+        el("div", {}, [
+          el("label", { class: "block text-sm text-mute mb-2" }, ["Current phase"]),
+          radioGroup(["0","1","2"], String(draft.phase), v => draft.phase = parseInt(v), p => PHASES[p].short)
+        ]),
+        el("div", { class: "grid grid-cols-2 gap-3" }, [
+          el("div", {}, [
+            el("label", { class: "block text-sm text-mute mb-2" }, ["Frequency / wk"]),
+            numberStepper(draft.frequency, 2, 7, v => draft.frequency = v)
+          ]),
+          el("div", {}, [
+            el("label", { class: "block text-sm text-mute mb-2" }, ["Session length (min)"]),
+            numberStepper(draft.sessionLength, 20, 90, v => draft.sessionLength = v, 5)
+          ])
+        ])
+      ]));
+    } else if (step === 1) {
+      wrap.appendChild(el("div", { class: "space-y-3" }, [
+        el("label", { class: "block text-sm text-mute mb-1" }, ["Equipment available"]),
+        chipSelect(DEFAULT_EQUIPMENT, draft.equipment, prettyEquipment)
+      ]));
+    } else {
+      wrap.appendChild(el("div", { class: "space-y-3" }, [
+        el("label", { class: "block text-sm text-mute mb-1" }, ["Contraindications"]),
+        el("p", { class: "text-xs text-mute mb-2" }, ["These suppress unsafe exercises silently. Skip if none apply."]),
+        chipSelect(DEFAULT_CONTRAINDICATIONS, draft.contraindications, prettyContra)
+      ]));
+    }
+
+    wrap.appendChild(el("div", { class: "fixed left-0 right-0 bottom-0 bg-bg/90 backdrop-blur p-4" }, [
+      el("div", { class: "max-w-md mx-auto flex gap-2" }, [
+        step > 0 ? el("button", { class: "flex-1 py-3 rounded-xl bg-slate-800 text-mute", onClick: () => { step--; paint(); } }, ["Back"]) : null,
+        el("button", { class: "flex-1 py-3 rounded-xl bg-accent text-bg font-medium", onClick: () => {
+          if (step < 2) { step++; paint(); return; }
+          STATE.profile = {
+            goal: draft.goal, phase: draft.phase, frequency: draft.frequency, sessionLength: draft.sessionLength,
+            equipment: [...draft.equipment], contraindications: [...draft.contraindications]
+          };
+          STATE.setupDone = true;
+          STATE.mesocycle.startDate = todayISO();
+          STATE.mesocycle.currentWeek = 1;
+          saveState();
+          navigate("today");
+        } }, [step < 2 ? "Next" : "Start training"])
+      ])
+    ]));
+  }
+  paint();
+  return wrap;
+}
+
+function radioGroup(options, value, onChange, labelFn = x => prettyEquipment(x)) {
+  const row = el("div", { class: "flex gap-2 flex-wrap" });
+  options.forEach(opt => {
+    const active = String(opt) === String(value);
+    row.appendChild(el("button", {
+      class: `px-3 py-2 rounded-lg border ${active ? "border-accent text-accent bg-accent/10" : "border-slate-700 text-mute"}`,
+      onClick: () => { onChange(opt); row.parentElement.parentElement && row.parentElement.replaceChild(radioGroup(options, opt, onChange, labelFn), row); }
+    }, [labelFn(opt)]));
+  });
+  return row;
+}
+
+function chipSelect(options, set, labelFn) {
+  const row = el("div", { class: "flex flex-wrap gap-2" });
+  options.forEach(opt => {
+    const active = set.has(opt);
+    row.appendChild(el("button", {
+      class: `px-3 py-2 rounded-lg border text-sm ${active ? "border-accent text-accent bg-accent/10" : "border-slate-700 text-mute"}`,
+      onClick: (e) => { active ? set.delete(opt) : set.add(opt); e.target.replaceWith(...chipSelect(options, set, labelFn).children); }
+    }, [labelFn(opt)]));
+  });
+  return row;
+}
+
+function numberStepper(value, min, max, onChange, step = 1) {
+  const wrap = el("div", { class: "flex items-center gap-2 bg-slate-800 rounded-lg p-1" });
+  const display = el("div", { class: "flex-1 text-center text-lg" }, [String(value)]);
+  wrap.appendChild(el("button", { class: "w-10 h-10 rounded-lg bg-slate-700", onClick: () => { value = Math.max(min, value - step); onChange(value); display.textContent = String(value); } }, ["−"]));
+  wrap.appendChild(display);
+  wrap.appendChild(el("button", { class: "w-10 h-10 rounded-lg bg-slate-700", onClick: () => { value = Math.min(max, value + step); onChange(value); display.textContent = String(value); } }, ["+"]));
+  return wrap;
+}
+
+const prettyEquipment = (e) => ({
+  adjustable_dumbbells: "Dumbbells", barbell_plates: "Barbell", adjustable_bench: "Bench",
+  pull_up_bar: "Pull-up bar", resistance_bands: "Bands", cable_machine: "Cable",
+  foam_roller: "Foam roller", yoga_mat: "Yoga mat", bodyweight: "Bodyweight",
+  recomp: "Recomp", preserve: "Preserve", rebuild: "Rebuild",
+  "0": "Phase 0", "1": "Phase 1", "2": "Phase 2"
+}[e] || e);
+
+const prettyContra = (c) => ({
+  right_anterior_shoulder: "Right anterior shoulder",
+  right_medial_ankle: "Right medial ankle"
+}[c] || c);
+
+//-----------------------------------------------------------------------------
+// Today screen — PRD §7 Flow A
+//-----------------------------------------------------------------------------
+
+function todaySession() {
+  const id = sessionIdFor(new Date());
+  if (STATE.sessions[id]) return STATE.sessions[id];
+  const s = generateSession(new Date());
+  STATE.sessions[id] = s; saveState();
+  return s;
+}
+
+function TodayScreen() {
+  const wrap = el("div");
+  const session = todaySession();
+  const meta = session.meta || CARD_META[session.cardType];
+  const isOff = meta?.kind === "off";
+
+  wrap.appendChild(header("Today", el("div", { class: "flex gap-1" }, [
+    iconBtn("⚙", () => navigate("settings"))
+  ])));
+
+  const totalSets = (session.planned || []).reduce((n, p) => n + p.sets.length, 0);
+  const dayName = new Date().toLocaleDateString(undefined, { weekday: "short" });
+
+  const card = el("section", { class: "bg-card rounded-2xl p-5 border border-slate-800" });
+  if (isOff) {
+    card.appendChild(el("div", { class: "space-y-3" }, [
+      el("div", { class: "text-mute text-sm" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
+      el("h2", { class: "text-2xl font-semibold" }, ["Off Day"]),
+      el("p", { class: "text-mute" }, ["Recover. Tomorrow's card is ready when you are."])
+    ]));
+  } else {
+    card.appendChild(el("div", { class: "space-y-2" }, [
+      el("div", { class: "flex items-center gap-2" }, [
+        el("span", { class: "text-mute text-sm" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
+        session.deload ? pill("Deload week", "bg-warn/20 text-warn") : null
+      ]),
+      el("h2", { class: "text-3xl font-semibold tracking-tight" }, [meta.title]),
+      el("div", { class: "text-mute" }, [
+        `~${meta.duration} min · ${session.planned.length} exercises · ${totalSets} sets`
+      ])
+    ]));
+
+    if (session.recovery?.length) {
+      card.appendChild(el("div", { class: "mt-4 pt-4 border-t border-slate-800 text-sm text-mute" }, [
+        "Includes mandatory recovery block: " + session.recovery.map(r => r.name.split(":")[0]).join(" + ")
+      ]));
+    }
+
+    card.appendChild(el("button", {
+      class: "w-full mt-5 py-4 rounded-xl bg-accent text-bg font-semibold text-lg",
+      onClick: () => { session.startedAt = Date.now(); STATE.sessions[session.id] = session; saveState(); navigate("session"); }
+    }, [session.startedAt && !session.completedAt ? "Resume" : "Start"]));
+
+    card.appendChild(el("button", {
+      class: "w-full mt-2 py-2 text-mute text-sm",
+      onClick: () => {
+        if (!confirm("Shift split by one day?")) return;
+        STATE.daySkew = (STATE.daySkew || 0) + 1;
+        delete STATE.sessions[session.id];
+        saveState(); render();
+      }
+    }, ["Not today — shift split"]));
+  }
+  wrap.appendChild(card);
+
+  // Tomorrow preview
+  const tomorrow = new Date(Date.now() + 86400000);
+  const tomCard = generateSession(tomorrow);
+  wrap.appendChild(el("section", { class: "mt-6" }, [
+    el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Tomorrow"]),
+    el("div", { class: "bg-surface/40 rounded-xl p-3 border border-slate-800 flex items-center justify-between" }, [
+      el("div", {}, [
+        el("div", { class: "font-medium" }, [tomCard.meta?.title || "Off Day"]),
+        el("div", { class: "text-xs text-mute" }, [tomCard.planned.length ? `${tomCard.planned.length} exercises` : "—"])
+      ]),
+      el("span", { class: "text-mute text-xs" }, [new Date(Date.now()+86400000).toLocaleDateString(undefined, { weekday:"short" })])
+    ])
+  ]));
+
+  return wrap;
+}
+
+//-----------------------------------------------------------------------------
+// In-Progress screen — PRD §7 Flow A 2-4
+//-----------------------------------------------------------------------------
+
+function SessionScreen() {
+  const wrap = el("div");
+  const session = STATE.sessions[sessionIdFor(new Date())] || todaySession();
+  if (!session.planned?.length && !session.recovery?.length) { navigate("today"); return wrap; }
+
+  let activeIdx = session.planned.findIndex(p => p.sets.some(s => !s.completed));
+  if (activeIdx === -1) activeIdx = session.planned.length; // recovery phase
+
+  function paint() {
+    wrap.innerHTML = "";
+    wrap.appendChild(header(session.meta?.title || "Session", el("button", {
+      class: "text-mute text-sm",
+      onClick: () => { if (confirm("Exit session? Progress is saved.")) navigate("today"); }
+    }, ["Pause"])));
+
+    const total = session.planned.length + (session.recovery?.length || 0);
+    const doneCount = session.planned.filter(p => p.sets.every(s => s.completed)).length
+                    + (session.recovery || []).filter(r => r.completed).length;
+    wrap.appendChild(el("div", { class: "h-1 bg-slate-800 rounded-full mb-5 overflow-hidden" }, [
+      el("div", { class: "h-full bg-accent", style: { width: `${(doneCount/total)*100}%` } })
+    ]));
+
+    if (activeIdx < session.planned.length) {
+      const ex = session.planned[activeIdx];
+      wrap.appendChild(exerciseCard(ex, activeIdx));
+    } else if ((session.recovery || []).some(r => !r.completed)) {
+      wrap.appendChild(recoveryCard(session));
+    } else {
+      finalize(session);
+      navigate("done", { _id: session.id });
+      return;
+    }
+
+    // upcoming list
+    if (activeIdx + 1 < session.planned.length) {
+      wrap.appendChild(el("div", { class: "mt-6" }, [
+        el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Up next"]),
+        ...session.planned.slice(activeIdx + 1).map((p, i) => el("div", {
+          class: "py-2 px-3 bg-surface/40 rounded-lg mb-1 text-sm flex justify-between"
+        }, [
+          el("span", {}, [`${activeIdx + 2 + i}. ${p.name}`]),
+          el("span", { class: "text-mute" }, [`${p.sets.length} × ${p.repRange.join("–")}`])
+        ]))
+      ]));
+    }
+  }
+
+  function exerciseCard(ex, idx) {
+    const card = el("section", { class: "bg-card border border-slate-800 rounded-2xl p-5" });
+    card.appendChild(el("div", { class: "flex items-start justify-between mb-3" }, [
+      el("div", {}, [
+        el("div", { class: "text-mute text-xs uppercase tracking-wide" }, [`Exercise ${idx+1} of ${session.planned.length}`]),
+        el("h2", { class: "text-xl font-semibold" }, [ex.name])
+      ]),
+      ex.isPhysio ? pill("Physio", "bg-accent/10 text-accent") : null
+    ]));
+    if (ex.notes) card.appendChild(el("p", { class: "text-xs text-mute mb-3" }, [ex.notes]));
+    if (ex.prescribedNote) card.appendChild(el("p", { class: "text-xs text-accent mb-3" }, [ex.prescribedNote]));
+
+    ex.sets.forEach((set, sIdx) => {
+      const row = el("div", { class: "flex items-center gap-3 py-2 row-press" });
+      const cb = el("button", {
+        class: `check w-8 h-8 rounded-full border-2 ${set.completed ? "bg-ok border-ok" : "border-slate-600"}`,
+        onClick: () => { set.completed = !set.completed; saveState({remote:false}); paint(); }
+      }, [set.completed ? el("span", { class: "text-bg font-bold" }, ["✓"]) : ""]);
+      const main = el("button", {
+        class: "flex-1 text-left",
+        onClick: () => toggleExpand(sIdx)
+      }, [
+        el("div", { class: "text-sm font-medium" }, [`Set ${sIdx + 1}`]),
+        el("div", { class: "text-xs text-mute" }, [
+          (set.load != null ? `${set.load} kg` : "—") + " · " + (set.reps != null ? `${set.reps} reps` : `${ex.repRange.join("–")} reps`)
+        ])
+      ]);
+      row.appendChild(cb); row.appendChild(main);
+      card.appendChild(row);
+
+      function toggleExpand(i) {
+        const exists = card.querySelector(`[data-edit="${i}"]`);
+        if (exists) { exists.remove(); return; }
+        const editor = el("div", { "data-edit": String(i), class: "ml-11 mb-2 flex gap-2" }, [
+          numericInput("kg", set.load, v => { set.load = v; saveState({remote:false}); }),
+          numericInput("reps", set.reps, v => { set.reps = v; saveState({remote:false}); })
+        ]);
+        row.after(editor);
+      }
+    });
+
+    // Long-press on card to flag exercise symptom
+    let pressTimer;
+    card.addEventListener("pointerdown", () => {
+      pressTimer = setTimeout(() => {
+        if (confirm(`Flag symptom on ${ex.name}?`)) {
+          ex.symptomFlag = true;
+          saveState({remote:false}); paint();
+        }
+      }, 600);
+    });
+    card.addEventListener("pointerup", () => clearTimeout(pressTimer));
+    card.addEventListener("pointerleave", () => clearTimeout(pressTimer));
+
+    if (ex.symptomFlag) card.appendChild(el("div", { class: "mt-3 text-xs text-warn" }, ["⚠ Symptom flagged"]));
+
+    // Auto-advance when all sets complete
+    if (ex.sets.every(s => s.completed)) {
+      setTimeout(() => { activeIdx++; paint(); }, 250);
+    }
+
+    card.appendChild(el("button", {
+      class: "w-full mt-4 py-2 text-mute text-sm",
+      onClick: () => { ex.sets.forEach(s => s.completed = true); saveState({remote:false}); paint(); }
+    }, ["Mark all sets done"]));
+
+    return card;
+  }
+
+  function recoveryCard(session) {
+    const card = el("section", { class: "bg-card border border-slate-800 rounded-2xl p-5" });
+    card.appendChild(el("h2", { class: "text-xl font-semibold mb-1" }, ["Recovery block"]));
+    card.appendChild(el("p", { class: "text-xs text-mute mb-3" }, ["Unskippable on resistance days in Phase 0/1."]));
+    session.recovery.forEach((b, i) => {
+      const row = el("div", { class: "flex items-center gap-3 py-2" });
+      row.appendChild(el("button", {
+        class: `check w-8 h-8 rounded-full border-2 ${b.completed ? "bg-ok border-ok" : "border-slate-600"}`,
+        onClick: () => { b.completed = !b.completed; saveState({remote:false}); paint(); }
+      }, [b.completed ? el("span", { class: "text-bg font-bold" }, ["✓"]) : ""]));
+      row.appendChild(el("div", {}, [
+        el("div", { class: "text-sm font-medium" }, [b.name]),
+        el("div", { class: "text-xs text-mute" }, [`${b.durationMin} min`])
+      ]));
+      card.appendChild(row);
+    });
+    return card;
+  }
+
+  function numericInput(label, value, onChange) {
+    return el("label", { class: "flex-1 bg-slate-800 rounded-lg px-3 py-2 flex items-center gap-2" }, [
+      el("span", { class: "text-xs text-mute" }, [label]),
+      Object.assign(el("input", {
+        type: "number", inputmode: "decimal",
+        class: "bg-transparent w-full outline-none text-sm",
+        value: value ?? ""
+      }), { oninput: e => onChange(e.target.value === "" ? null : parseFloat(e.target.value)) })
+    ]);
+  }
+
+  paint();
+  return wrap;
+}
+
+//-----------------------------------------------------------------------------
+// Done screen — PRD §7 Flow A.5
+//-----------------------------------------------------------------------------
+
+function finalize(session) {
+  session.completedAt = Date.now();
+  session.durationActual = session.startedAt ? Math.round((session.completedAt - session.startedAt) / 60000) : null;
+
+  // Update userExerciseHistory
+  for (const p of session.planned) {
+    const completedSets = p.sets.filter(s => s.completed);
+    if (!completedSets.length) continue;
+    const lastSet = completedSets[completedSets.length - 1];
+    const prev = STATE.exerciseHistory[p.exerciseId] || { symptomFlagCount: 0 };
+    STATE.exerciseHistory[p.exerciseId] = {
+      lastDate: session.date,
+      lastLoad: lastSet.load ?? prev.lastLoad ?? null,
+      lastReps: lastSet.reps ?? prev.lastReps ?? null,
+      lastSymptomFlag: !!p.symptomFlag,
+      symptomFlagCount: (prev.symptomFlagCount || 0) + (p.symptomFlag ? 1 : 0),
+      lastCardType: session.cardType
+    };
+  }
+  STATE.sessions[session.id] = session;
+  saveState();
+  syncSession(session);
+}
+
+function DoneScreen() {
+  const wrap = el("div");
+  const session = STATE.sessions[currentRoute().id] || STATE.sessions[sessionIdFor(new Date())];
+  wrap.appendChild(header("Done"));
+
+  wrap.appendChild(el("section", { class: "bg-card border border-slate-800 rounded-2xl p-6 text-center" }, [
+    el("div", { class: "text-5xl mb-3" }, ["✓"]),
+    el("h2", { class: "text-2xl font-semibold" }, [session?.meta?.title || "Session"]),
+    el("div", { class: "text-mute text-sm mt-1" }, [
+      session?.durationActual ? `${session.durationActual} min` : ""
+    ])
+  ]));
+
+  if (session && session.sessionSymptomFlag == null) {
+    wrap.appendChild(el("section", { class: "mt-6" }, [
+      el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Any pain today?"]),
+      el("div", { class: "flex gap-2" }, [
+        el("button", { class: "flex-1 py-3 rounded-xl bg-slate-800", onClick: () => { session.sessionSymptomFlag = false; saveState(); syncSession(session); render(); } }, ["No"]),
+        el("button", { class: "flex-1 py-3 rounded-xl bg-warn/20 text-warn", onClick: () => { session.sessionSymptomFlag = true; saveState(); syncSession(session); render(); } }, ["Yes"])
+      ])
+    ]));
+  } else {
+    wrap.appendChild(el("button", { class: "w-full mt-6 py-3 rounded-xl bg-accent text-bg font-medium", onClick: () => navigate("today") }, ["Finish"]));
+  }
+  return wrap;
+}
+
+//-----------------------------------------------------------------------------
+// Settings — PRD §11 (P0: phase, equipment, contraindications, deload override)
+//-----------------------------------------------------------------------------
+
+function SettingsScreen() {
+  const wrap = el("div");
+  wrap.appendChild(header("Settings", el("button", { class: "text-mute text-sm", onClick: () => navigate("today") }, ["Done"])));
+
+  // Phase
+  wrap.appendChild(section("Phase", [
+    el("p", { class: "text-xs text-mute mb-3" }, ["Manual advancement only. Everything downstream changes with this."]),
+    radioGroup(["0","1","2"], String(STATE.profile.phase), v => {
+      STATE.profile.phase = parseInt(v);
+      // Invalidate today's session so it re-generates under the new phase
+      delete STATE.sessions[sessionIdFor(new Date())];
+      saveState(); render();
+    }, p => PHASES[p].short)
+  ]));
+
+  // Mesocycle
+  wrap.appendChild(section("Mesocycle", [
+    el("div", { class: "text-sm text-mute" }, [`Week ${STATE.mesocycle.currentWeek} of 5${isDeloadWeek() ? " · Deload" : ""}`]),
+    el("div", { class: "flex gap-2 mt-3" }, [
+      el("button", { class: "flex-1 py-2 rounded-lg bg-slate-800 text-sm", onClick: () => {
+        STATE.mesocycle.startDate = todayISO(); STATE.mesocycle.currentWeek = 1;
+        delete STATE.sessions[sessionIdFor(new Date())];
+        saveState(); render();
+      }}, ["Reset to Week 1"]),
+      el("button", { class: "flex-1 py-2 rounded-lg bg-slate-800 text-sm", onClick: () => {
+        const target = isDeloadWeek() ? 1 : 5;
+        const offsetDays = (target - 1) * 7;
+        STATE.mesocycle.startDate = new Date(Date.now() - offsetDays * 86400000).toISOString().slice(0,10);
+        STATE.mesocycle.currentWeek = target;
+        delete STATE.sessions[sessionIdFor(new Date())];
+        saveState(); render();
+      }}, [isDeloadWeek() ? "Skip deload" : "Force deload"])
+    ])
+  ]));
+
+  // Equipment
+  const eqSet = new Set(STATE.profile.equipment);
+  wrap.appendChild(section("Equipment", [
+    chipSelect(DEFAULT_EQUIPMENT, eqSet, prettyEquipment),
+    el("button", { class: "mt-3 text-xs text-accent", onClick: () => {
+      STATE.profile.equipment = [...eqSet];
+      delete STATE.sessions[sessionIdFor(new Date())];
+      saveState(); render();
+    }}, ["Save equipment"])
+  ]));
+
+  // Contraindications
+  const cSet = new Set(STATE.profile.contraindications);
+  wrap.appendChild(section("Contraindications", [
+    el("p", { class: "text-xs text-mute mb-2" }, ["Active flags filter the exercise pool silently."]),
+    chipSelect(DEFAULT_CONTRAINDICATIONS, cSet, prettyContra),
+    el("button", { class: "mt-3 text-xs text-accent", onClick: () => {
+      STATE.profile.contraindications = [...cSet];
+      delete STATE.sessions[sessionIdFor(new Date())];
+      saveState(); render();
+    }}, ["Save contraindications"])
+  ]));
+
+  // Sync status
+  wrap.appendChild(section("Sync", [
+    el("div", { class: "text-sm text-mute" }, [
+      fbReady ? `Connected · uid ${fbUid?.slice(0,6)}…` : "Local-only (no Firebase config)"
+    ])
+  ]));
+
+  // Reset
+  wrap.appendChild(section("Reset", [
+    el("button", { class: "w-full py-2 rounded-lg bg-danger/20 text-danger text-sm", onClick: () => {
+      if (!confirm("Reset all local data?")) return;
+      localStorage.removeItem(LS_KEY); STATE = DEFAULT_STATE(); render();
+    }}, ["Reset local data"])
+  ]));
+
+  return wrap;
+}
+
+function section(title, children) {
+  return el("section", { class: "mb-6" }, [
+    el("h3", { class: "text-mute text-xs uppercase tracking-wide mb-2" }, [title]),
+    el("div", { class: "bg-card border border-slate-800 rounded-xl p-4" }, children)
+  ]);
+}
+
+//-----------------------------------------------------------------------------
+// Boot
+//-----------------------------------------------------------------------------
+
+(async function boot() {
+  try {
+    EXERCISES = await loadExerciseSeed();
+  } catch (e) {
+    console.error("[Cadence] Failed to load exercise seed", e);
+    root.innerHTML = `<div class="p-6 text-danger">Failed to load exercise database.</div>`;
+    return;
+  }
+
+  await initFirebase();
+  if (fbReady) {
+    try { await seedFirestoreIfNeeded(EXERCISES); } catch (e) { console.warn(e); }
+    await pullRemoteState();
+  }
+
+  refreshMesocycleWeek();
+  render();
+
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(()=>{});
+})();
+</script>
+</body>
+</html>
