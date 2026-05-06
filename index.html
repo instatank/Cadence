@@ -153,8 +153,11 @@ const CARD_META = {
   pull:              { title: "Pull",               duration: 60, kind: "resistance" },
   legs:              { title: "Legs",               duration: 60, kind: "resistance" },
   upper:             { title: "Upper",              duration: 55, kind: "resistance" },
-  off:               { title: "Off Day",            duration: 0,  kind: "off" }
+  off:               { title: "Off Day",            duration: 0,  kind: "off" },
+  rest:              { title: "Rest Day",           duration: 0,  kind: "rest" }
 };
+
+const isRestDay = (iso) => (STATE.restDays || []).includes(iso);
 
 // Card type → category targets (count of exercise slots from each category, in order)
 // Compound-first ordering by how slots are listed.
@@ -259,7 +262,8 @@ const DEFAULT_STATE = () => ({
     contraindications: [...DEFAULT_CONTRAINDICATIONS]
   },
   mesocycle: { startDate: todayISO(), currentWeek: 1 }, // week 1..5; 5 = deload
-  daySkew: 0, // increments on "Not today" — shifts split sequence
+  daySkew: 0, // increments on "Rest today" — shifts planned split forward
+  restDays: [], // ISO dates the user has tagged as rest
   sessions: {}, // sessionId → session record (also synced)
   exerciseHistory: {}, // exerciseId → { lastDate, lastLoad, lastReps, symptomFlagCount, lastCardType }
   videoOverrides: {}, // exerciseId → preferred YouTube URL (user override, syncs)
@@ -277,6 +281,7 @@ function saveState({ remote = true } = {}) {
       profile: STATE.profile,
       mesocycle: STATE.mesocycle,
       daySkew: STATE.daySkew,
+      restDays: STATE.restDays || [],
       setupDone: STATE.setupDone,
       exerciseHistory: STATE.exerciseHistory,
       videoOverrides: STATE.videoOverrides || {},
@@ -424,10 +429,17 @@ function prescribeLoad(ex) {
 // 5. Generate today's session
 function generateSession(date = new Date()) {
   refreshMesocycleWeek();
+  const iso = date.toISOString().slice(0,10);
+
+  // User-tagged rest day overrides the engine's day-type lookup.
+  if (isRestDay(iso)) {
+    return { id: sessionIdFor(date), date: iso, cardType: "rest", planned: [], recovery: [], meta: CARD_META.rest };
+  }
+
   const cardType = dayCardType(date);
   const meta = CARD_META[cardType];
   if (!meta || meta.kind === "off") {
-    return { id: sessionIdFor(date), date: date.toISOString().slice(0,10), cardType, planned: [], recovery: [], meta };
+    return { id: sessionIdFor(date), date: iso, cardType, planned: [], recovery: [], meta };
   }
 
   const recipe = CARD_RECIPES[cardType] || [];
@@ -821,6 +833,8 @@ function TodayScreen() {
   const session = todaySession();
   const meta = session.meta || CARD_META[session.cardType];
   const isOff = meta?.kind === "off";
+  const isRest = meta?.kind === "rest";
+  const todayKey = todayISO();
 
   wrap.appendChild(appBar("Today", {
     subtitle: PHASES[STATE.profile.phase].short,
@@ -831,11 +845,32 @@ function TodayScreen() {
   const dayName = new Date().toLocaleDateString(undefined, { weekday: "short" });
 
   const card = el("section", { class: "bg-card rounded-md p-5 border border-hairline" });
-  if (isOff) {
+  if (isRest) {
+    const tomorrow = new Date(Date.now() + 86400000);
+    const tomPlan = generateSession(tomorrow);
     card.appendChild(el("div", { class: "space-y-3" }, [
-      el("div", { class: "text-mute text-sm" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
-      el("h2", { class: "text-2xl font-semibold" }, ["Off Day"]),
-      el("p", { class: "text-mute" }, ["Recover. Tomorrow's card is ready when you are."])
+      el("div", { class: "t-meta text-mute" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
+      el("h2", { class: "t-display text-ink" }, ["Rest day"]),
+      el("p", { class: "t-meta text-mute" }, [
+        tomPlan.meta?.kind === "rest"
+          ? "Tomorrow is also marked rest. Take it easy."
+          : `Plan carried forward — tomorrow: ${tomPlan.meta?.title || "Off Day"}.`
+      ])
+    ]));
+    card.appendChild(el("button", {
+      class: "w-full mt-5 h-12 rounded-sm bg-surface2 text-mute t-meta",
+      onClick: () => {
+        STATE.restDays = (STATE.restDays || []).filter(d => d !== todayKey);
+        STATE.daySkew = Math.max(0, (STATE.daySkew || 0) - 1);
+        delete STATE.sessions[session.id];
+        saveState(); render();
+      }
+    }, ["Undo rest day"]));
+  } else if (isOff) {
+    card.appendChild(el("div", { class: "space-y-3" }, [
+      el("div", { class: "t-meta text-mute" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
+      el("h2", { class: "t-display text-ink" }, ["Off Day"]),
+      el("p", { class: "t-meta text-mute" }, ["Recover. Tomorrow's card is ready when you are."])
     ]));
   } else {
     card.appendChild(el("div", { class: "space-y-2" }, [
@@ -863,14 +898,16 @@ function TodayScreen() {
     }, [session.startedAt && !session.completedAt ? "Resume" : "Start workout"]));
 
     card.appendChild(el("button", {
-      class: "w-full mt-2 py-2 text-mute text-sm",
+      class: "w-full mt-2 py-2 text-mute t-meta",
       onClick: () => {
-        if (!confirm("Shift split by one day?")) return;
+        if (session.startedAt && !session.completedAt) { alert("You've already started today's session. Finish or pause first."); return; }
+        if (!confirm("Mark today as a rest day?\n\nToday's plan carries forward to tomorrow.")) return;
+        STATE.restDays = [...(STATE.restDays || []), todayKey];
         STATE.daySkew = (STATE.daySkew || 0) + 1;
         delete STATE.sessions[session.id];
         saveState(); render();
       }
-    }, ["Not today — shift split"]));
+    }, ["Rest today → carry plan forward"]));
   }
   wrap.appendChild(card);
 
@@ -933,16 +970,17 @@ function weekStrip() {
     const preview = generateSession(d);
     const meta = preview.meta || CARD_META[preview.cardType];
     const isOff = meta?.kind === "off";
+    const isRest = meta?.kind === "rest";
     const completed = !!session?.completedAt;
 
-    const dotKlass = completed ? "bg-ok" : isOff ? "bg-dim" : "bg-accent";
+    const dotKlass = completed ? "bg-ok" : isRest ? "bg-warn" : isOff ? "bg-dim" : "bg-accent";
     const btn = el("button", {
       class: `flex flex-col items-center justify-center py-2 rounded-sm ${isToday ? "bg-surface2 ring-1 ring-accent/40" : "hover:bg-surface2"}`,
       onClick: () => openDayPreview(d)
     }, [
       el("div", { class: `text-xs ${isToday ? "text-accent" : "text-mute"} font-medium` }, [d.toLocaleDateString(undefined, { weekday: "short" })[0]]),
       el("div", { class: `text-sm ${isToday ? "text-ink" : "text-mute"}` }, [String(d.getDate())]),
-      el("div", { class: `mt-1 w-1.5 h-1.5 rounded-full ${dotKlass}` })
+      el("div", { class: `mt-1 w-1.5 h-1.5 rounded-full ${dotKlass}`, "aria-label": isRest ? "Rest" : isOff ? "Off" : "Planned" })
     ]);
     row.appendChild(btn);
   });
@@ -980,7 +1018,9 @@ function openDayPreview(date) {
     el("button", { class: "text-mute text-xl px-2", onClick: () => backdrop.remove() }, ["×"])
   ]));
 
-  if (meta?.kind === "off") {
+  if (meta?.kind === "rest") {
+    sheet.appendChild(el("p", { class: "text-mute" }, ["Rest day — plan was carried forward."]));
+  } else if (meta?.kind === "off") {
     sheet.appendChild(el("p", { class: "text-mute" }, ["Off day — no session planned."]));
   } else {
     const list = el("ol", { class: "space-y-2 mt-2" });
@@ -1302,6 +1342,41 @@ function SettingsScreen() {
         delete STATE.sessions[sessionIdFor(new Date())];
         saveState(); render();
       }}, [isDeloadWeek() ? "Skip deload" : "Force deload"])
+    ])
+  ]));
+
+  // Rest days + day-skew alignment
+  const restList = (STATE.restDays || []).slice().sort().reverse();
+  const restRows = restList.length
+    ? restList.slice(0, 8).map(iso => el("div", { class: "flex items-center justify-between py-1 t-meta" }, [
+        el("span", { class: "num text-ink" }, [new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", weekday: "short" })]),
+        el("button", { class: "text-mute hover:text-ink", onClick: () => {
+          STATE.restDays = (STATE.restDays || []).filter(d => d !== iso);
+          STATE.daySkew = Math.max(0, (STATE.daySkew || 0) - 1);
+          saveState(); render();
+        }}, ["Undo"])
+      ]))
+    : [el("div", { class: "t-meta text-mute" }, ["No rest days marked yet."])];
+
+  wrap.appendChild(section("Rest days & schedule alignment", [
+    el("div", { class: "t-meta text-mute mb-3" }, [
+      `Day-skew: `, el("span", { class: "num text-ink" }, [String(STATE.daySkew || 0)]),
+      ` · ${restList.length} rest ${restList.length === 1 ? "day" : "days"} on record.`
+    ]),
+    ...restRows,
+    restList.length > 8 ? el("div", { class: "t-meta text-mute mt-1" }, [`+${restList.length - 8} more`]) : null,
+    el("div", { class: "flex gap-2 mt-3" }, [
+      el("button", { class: "flex-1 py-2 rounded-sm bg-surface2 t-meta", onClick: () => {
+        if (!confirm("Re-align workout split with the calendar?\n\nThis resets day-skew to 0 — the engine's Mon..Sun mapping will apply again from today.")) return;
+        STATE.daySkew = 0;
+        delete STATE.sessions[sessionIdFor(new Date())];
+        saveState(); render();
+      }}, ["Realign with weekdays"]),
+      restList.length ? el("button", { class: "flex-1 py-2 rounded-sm bg-surface2 t-meta", onClick: () => {
+        if (!confirm("Clear all recorded rest days?")) return;
+        STATE.restDays = [];
+        saveState(); render();
+      }}, ["Clear rest days"]) : null
     ])
   ]));
 
