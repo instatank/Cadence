@@ -524,15 +524,51 @@ function el(tag, attrs = {}, children = []) {
   return n;
 }
 
-function header(title, rightBtn) {
-  return el("header", { class: "flex items-center justify-between mb-5" }, [
-    el("h1", { class: "text-2xl font-semibold tracking-tight" }, [title]),
-    rightBtn || el("div")
-  ]);
+// Inline icons — minimal SVG, currentColor.
+const ICONS = {
+  home: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>',
+  back: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  cog:  '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1A2 2 0 1 1 4.4 16.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.4l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
+};
+
+function iconBtn(svg, onClick, opts = {}) {
+  const b = el("button", {
+    class: `inline-flex items-center justify-center w-10 h-10 rounded-sm text-${opts.tone || "mute"} hover:text-ink active:bg-surface2 transition`,
+    "aria-label": opts.label || ""
+  }, []);
+  b.innerHTML = svg;
+  b.addEventListener("click", onClick);
+  return b;
 }
 
-function iconBtn(label, onClick) {
-  return el("button", { class: "text-mute hover:text-ink p-2 rounded-sm", onClick }, [label]);
+// Unified app bar: back (optional) + title + home (default) + extra right element.
+// opts: { back: fn|null, home: fn|null|false, right: Node, subtitle: string }
+function appBar(title, opts = {}) {
+  const route = currentRoute().name || "today";
+  const onSetup = !STATE.setupDone;
+  const left = el("div", { class: "flex items-center gap-1 w-10" });
+  if (opts.back) left.appendChild(iconBtn(ICONS.back, opts.back, { label: "Back" }));
+
+  const center = el("div", { class: "flex-1 text-center min-w-0 px-2" }, [
+    el("h1", { class: "t-body text-ink truncate" }, [title]),
+    opts.subtitle ? el("div", { class: "t-meta text-mute truncate" }, [opts.subtitle]) : null
+  ]);
+
+  const right = el("div", { class: "flex items-center gap-1 justify-end w-10" });
+  // Home: default to navigate("today"); suppress on Today and on Setup (gated flow).
+  const homeFn = opts.home === false ? null
+    : opts.home || (route === "today" || onSetup ? null : () => navigate("today"));
+  if (opts.right) right.appendChild(opts.right);
+  if (homeFn) right.appendChild(iconBtn(ICONS.home, homeFn, { label: "Home" }));
+
+  return el("header", {
+    class: "sticky top-0 -mx-4 px-4 py-2 mb-4 bg-bg/95 backdrop-blur z-30 border-b border-hairline flex items-center"
+  }, [left, center, right]);
+}
+
+// Back-compat shim — old header() callers still work, but prefer appBar going forward.
+function header(title, rightBtn) {
+  return appBar(title, { right: rightBtn || null });
 }
 
 // tone: null (default mute) | "warn" | "accent"
@@ -626,7 +662,11 @@ function SetupScreen() {
   const wrap = el("div");
   function paint() {
     wrap.innerHTML = "";
-    wrap.appendChild(header("Setup", el("span", { class: "text-mute text-sm" }, [`${step+1}/3`])));
+    wrap.appendChild(appBar("Setup", {
+      back: step > 0 ? () => { step--; paint(); } : null,
+      home: false, // gated — must finish onboarding
+      right: el("span", { class: "t-meta num text-mute pr-2" }, [`${step+1}/3`])
+    }));
 
     if (step === 0) {
       wrap.appendChild(el("div", { class: "space-y-5" }, [
@@ -782,9 +822,10 @@ function TodayScreen() {
   const meta = session.meta || CARD_META[session.cardType];
   const isOff = meta?.kind === "off";
 
-  wrap.appendChild(header("Today", el("div", { class: "flex gap-1" }, [
-    iconBtn("⚙", () => navigate("settings"))
-  ])));
+  wrap.appendChild(appBar("Today", {
+    subtitle: PHASES[STATE.profile.phase].short,
+    right: iconBtn(ICONS.cog, () => navigate("settings"), { label: "Settings" })
+  }));
 
   const totalSets = (session.planned || []).reduce((n, p) => n + p.sets.length, 0);
   const dayName = new Date().toLocaleDateString(undefined, { weekday: "short" });
@@ -986,14 +1027,16 @@ function SessionScreen() {
 
   function paint() {
     wrap.innerHTML = "";
-    wrap.appendChild(header(session.meta?.title || "Session", el("button", {
-      class: "text-mute text-sm",
-      onClick: () => { if (confirm("Exit session? Progress is saved.")) navigate("today"); }
-    }, ["Pause"])));
-
-    const total = session.planned.length + (session.recovery?.length || 0);
+    const exitSession = () => { if (confirm("Exit session? Progress is saved.")) navigate("today"); };
     const doneCount = session.planned.filter(p => p.sets.every(s => s.completed)).length
                     + (session.recovery || []).filter(r => r.completed).length;
+    const total = session.planned.length + (session.recovery?.length || 0);
+    wrap.appendChild(appBar(session.meta?.title || "Session", {
+      subtitle: `${doneCount} of ${total} complete`,
+      back: exitSession,
+      home: exitSession
+    }));
+
     wrap.appendChild(el("div", { class: "h-1 bg-surface2 rounded-full mb-5 overflow-hidden" }, [
       el("div", { class: "h-full bg-accent", style: { width: `${(doneCount/total)*100}%` } })
     ]));
@@ -1104,10 +1147,24 @@ function SessionScreen() {
       setTimeout(() => { activeIdx++; paint(); }, 250);
     }
 
-    card.appendChild(el("button", {
-      class: "w-full mt-4 py-2 text-mute text-sm",
-      onClick: () => { ex.sets.forEach(s => s.completed = true); saveState({remote:false}); paint(); }
-    }, ["Mark all sets done"]));
+    card.appendChild(el("div", { class: "mt-4 grid grid-cols-2 gap-2" }, [
+      el("button", {
+        class: "h-10 rounded-sm bg-surface2 text-mute t-meta",
+        onClick: () => {
+          if (!confirm(`Skip ${ex.name}?`)) return;
+          ex.skipped = true;
+          // mark remaining sets as not-counted by removing them
+          ex.sets = ex.sets.filter(s => s.completed);
+          saveState({ remote: false });
+          activeIdx++;
+          paint();
+        }
+      }, ["Skip exercise →"]),
+      el("button", {
+        class: "h-10 rounded-sm bg-surface2 text-mute t-meta",
+        onClick: () => { ex.sets.forEach(s => s.completed = true); saveState({remote:false}); paint(); }
+      }, ["Mark all done"])
+    ]));
 
     return card;
   }
@@ -1185,7 +1242,7 @@ function finalize(session) {
 function DoneScreen() {
   const wrap = el("div");
   const session = STATE.sessions[currentRoute().id] || STATE.sessions[sessionIdFor(new Date())];
-  wrap.appendChild(header("Done"));
+  wrap.appendChild(appBar("Done", { back: () => navigate("today") }));
 
   wrap.appendChild(el("section", { class: "bg-card border border-hairline rounded-md p-6 text-center" }, [
     el("div", { class: "text-5xl mb-3" }, ["✓"]),
@@ -1215,7 +1272,7 @@ function DoneScreen() {
 
 function SettingsScreen() {
   const wrap = el("div");
-  wrap.appendChild(header("Settings", el("button", { class: "text-mute text-sm", onClick: () => navigate("today") }, ["Done"])));
+  wrap.appendChild(appBar("Settings", { back: () => navigate("today") }));
 
   // Phase
   wrap.appendChild(section("Phase", [
