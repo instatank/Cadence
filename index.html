@@ -106,7 +106,7 @@ const CARD_RECIPES = {
   light_lower:       [["quad_dominant", 2, { exclude: ["bilateral_squat_heavy"] }], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}]],
   light_lower_push:  [["quad_dominant", 2, {}], ["hinge_posterior", 1, {}], ["scap_postural", 2, {}], ["calf_lower_leg", 1, {}]],
   posterior_scap:    [["scap_postural", 4, {}], ["horizontal_pull", 1, {}], ["physio_specific", 1, {}]],
-  recovery:          [["recovery_mobility", 4, {}], ["physio_specific", 2, {}]],
+  recovery:          [["recovery_mobility", 2, {}], ["mobility_movement", 2, {}], ["yoga_asana", 1, {}], ["physio_specific", 2, {}]],
 
   lower:             [["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
   push_modified:     [["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["arms_isolation", 2, { filter: "tricep" }]],
@@ -173,7 +173,7 @@ async function loadExerciseSeed() {
 async function seedFirestoreIfNeeded(seed) {
   if (!fbReady) return;
   const meta = await getDoc(doc(fbDb, "system", "seed"));
-  if (meta.exists() && meta.data().version === "1.0") return;
+  if (meta.exists() && meta.data().version === "2.0") return;
   // Batch write all exercises
   const chunks = [];
   for (let i = 0; i < seed.length; i += 400) chunks.push(seed.slice(i, i + 400));
@@ -182,7 +182,7 @@ async function seedFirestoreIfNeeded(seed) {
     chunk.forEach(ex => batch.set(doc(fbDb, "exercises", ex.id), ex));
     await batch.commit();
   }
-  await setDoc(doc(fbDb, "system", "seed"), { version: "1.0", seededAt: serverTimestamp(), count: seed.length });
+  await setDoc(doc(fbDb, "system", "seed"), { version: "2.0", seededAt: serverTimestamp(), count: seed.length });
   console.info(`[Cadence] Seeded ${seed.length} exercises to Firestore.`);
 }
 
@@ -389,8 +389,10 @@ function generateSession(date = new Date()) {
         sets: Array.from({ length: sets }, () => ({ reps: null, load: rx.load, completed: false })),
         repRange: rx.reps, prescribedLoad: rx.load, prescribedNote: rx.note,
         rest_seconds: ex.rest_seconds, isPhysio: ex.is_physio || false, notes: ex.notes || "",
-        referenceVideoUrl: ex.reference_video_url || null,
-        referenceDiagramUrl: ex.reference_diagram_url || null
+        cue: ex.cue || "",
+        videoUrl: ex.video_url || null,
+        videoSource: ex.video_source || null,
+        videoDurationSec: ex.video_duration_sec || null
       });
     }
   }
@@ -630,16 +632,14 @@ const prettyContra = (c) => ({
   right_medial_ankle: "Right medial ankle"
 }[c] || c);
 
-// Reference links — curated if seeded, else fall back to a YouTube search query.
+// Reference links — curated video_url if seeded, else fall back to a YouTube search query.
 function referenceLinks(ex) {
   const out = [];
-  if (ex.referenceVideoUrl) {
-    out.push({ kind: "video", label: "Watch demo", url: ex.referenceVideoUrl, curated: true });
-  }
-  if (ex.referenceDiagramUrl) {
-    out.push({ kind: "diagram", label: "View diagram", url: ex.referenceDiagramUrl, curated: true });
-  }
-  if (out.length === 0) {
+  if (ex.videoUrl) {
+    const dur = ex.videoDurationSec ? ` · ${Math.round(ex.videoDurationSec / 60)}m` : "";
+    const src = ex.videoSource ? ` · ${ex.videoSource}` : "";
+    out.push({ kind: "video", label: `Watch demo${dur}${src}`, url: ex.videoUrl, curated: true });
+  } else {
     const q = encodeURIComponent(`${ex.name} how to do form`);
     out.push({ kind: "video", label: "Search YouTube", url: `https://www.youtube.com/results?search_query=${q}`, curated: false });
     const g = encodeURIComponent(`${ex.name} exercise diagram`);
@@ -792,6 +792,7 @@ function SessionScreen() {
       ]),
       ex.isPhysio ? pill("Physio", "bg-accent/10 text-accent") : null
     ]));
+    if (ex.cue) card.appendChild(el("p", { class: "text-sm text-ink mb-2" }, [ex.cue]));
     if (ex.notes) card.appendChild(el("p", { class: "text-xs text-mute mb-3" }, [ex.notes]));
     if (ex.prescribedNote) card.appendChild(el("p", { class: "text-xs text-accent mb-3" }, [ex.prescribedNote]));
 
