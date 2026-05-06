@@ -729,7 +729,129 @@ function TodayScreen() {
     ])
   ]));
 
+  // Reserve space so the sticky week strip doesn't cover content
+  wrap.appendChild(el("div", { class: "h-24" }));
+
+  // Sticky week strip — tap a day to preview its plan
+  wrap.appendChild(weekStrip());
+
   return wrap;
+}
+
+//-----------------------------------------------------------------------------
+// Week strip + day preview sheet
+//-----------------------------------------------------------------------------
+
+function startOfWeek(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  const dow = d.getDay(); // 0=Sun..6=Sat
+  const diff = (dow === 0 ? -6 : 1 - dow); // shift back to Monday
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function weekStrip() {
+  const todayKey = todayISO();
+  const monday = startOfWeek(new Date());
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday); d.setDate(monday.getDate() + i); return d;
+  });
+
+  const bar = el("nav", {
+    class: "fixed bottom-0 left-0 right-0 bg-bg/95 backdrop-blur border-t border-slate-800",
+    style: { paddingBottom: "env(safe-area-inset-bottom)" }
+  });
+  const inner = el("div", { class: "max-w-md mx-auto px-3 py-2" });
+  const label = el("div", { class: "text-mute text-[10px] uppercase tracking-wide mb-1 text-center" }, ["This week"]);
+  inner.appendChild(label);
+
+  const row = el("div", { class: "grid grid-cols-7 gap-1" });
+  days.forEach(d => {
+    const iso = d.toISOString().slice(0,10);
+    const isToday = iso === todayKey;
+    const session = STATE.sessions["s_" + iso];
+    const preview = generateSession(d);
+    const meta = preview.meta || CARD_META[preview.cardType];
+    const isOff = meta?.kind === "off";
+    const completed = !!session?.completedAt;
+
+    const dotKlass = completed ? "bg-ok" : isOff ? "bg-slate-600" : "bg-accent";
+    const btn = el("button", {
+      class: `flex flex-col items-center justify-center py-2 rounded-lg ${isToday ? "bg-slate-800 ring-1 ring-accent/40" : "hover:bg-slate-800/60"}`,
+      onClick: () => openDayPreview(d)
+    }, [
+      el("div", { class: `text-xs ${isToday ? "text-accent" : "text-mute"} font-medium` }, [d.toLocaleDateString(undefined, { weekday: "short" })[0]]),
+      el("div", { class: `text-sm ${isToday ? "text-ink" : "text-mute"}` }, [String(d.getDate())]),
+      el("div", { class: `mt-1 w-1.5 h-1.5 rounded-full ${dotKlass}` })
+    ]);
+    row.appendChild(btn);
+  });
+  inner.appendChild(row);
+  bar.appendChild(inner);
+  return bar;
+}
+
+function openDayPreview(date) {
+  const preview = generateSession(date);
+  const meta = preview.meta || CARD_META[preview.cardType];
+  const dayLabel = date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+
+  // Backdrop
+  const backdrop = el("div", {
+    class: "fixed inset-0 bg-black/60 z-40 flex items-end justify-center fadein",
+    onClick: (e) => { if (e.target === backdrop) backdrop.remove(); }
+  });
+
+  // Sheet
+  const sheet = el("div", {
+    class: "w-full max-w-md bg-card border-t border-slate-800 rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto no-scrollbar",
+    style: { paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }
+  });
+
+  sheet.appendChild(el("div", { class: "flex items-start justify-between mb-3" }, [
+    el("div", {}, [
+      el("div", { class: "text-mute text-xs uppercase tracking-wide" }, [dayLabel]),
+      el("h2", { class: "text-2xl font-semibold tracking-tight" }, [meta?.title || "Off Day"]),
+      meta?.kind !== "off" ? el("div", { class: "text-mute text-sm mt-1" }, [
+        `~${meta.duration} min · ${preview.planned.length} exercises · ${preview.planned.reduce((n,p)=>n+p.sets.length,0)} sets`
+      ]) : null,
+      preview.deload ? pill("Deload week", "bg-warn/20 text-warn") : null
+    ]),
+    el("button", { class: "text-mute text-xl px-2", onClick: () => backdrop.remove() }, ["×"])
+  ]));
+
+  if (meta?.kind === "off") {
+    sheet.appendChild(el("p", { class: "text-mute" }, ["Off day — no session planned."]));
+  } else {
+    const list = el("ol", { class: "space-y-2 mt-2" });
+    preview.planned.forEach((p, i) => {
+      list.appendChild(el("li", { class: "py-2 px-3 bg-surface/40 rounded-lg border border-slate-800" }, [
+        el("div", { class: "flex justify-between items-baseline gap-2" }, [
+          el("div", { class: "font-medium" }, [`${i+1}. ${p.name}`]),
+          el("div", { class: "text-xs text-mute whitespace-nowrap" }, [`${p.sets.length} × ${p.repRange.join("–")}`])
+        ]),
+        p.cue ? el("div", { class: "text-xs text-mute mt-1" }, [p.cue]) : null
+      ]));
+    });
+    sheet.appendChild(list);
+
+    if (preview.recovery?.length) {
+      sheet.appendChild(el("div", { class: "mt-4 pt-3 border-t border-slate-800" }, [
+        el("div", { class: "text-mute text-xs uppercase tracking-wide mb-2" }, ["Recovery block"]),
+        ...preview.recovery.map(r => el("div", { class: "text-sm py-1" }, [`• ${r.name} · ${r.durationMin} min`]))
+      ]));
+    }
+
+    const isToday = date.toISOString().slice(0,10) === todayISO();
+    sheet.appendChild(el("button", {
+      class: `w-full mt-5 py-3 rounded-xl ${isToday ? "bg-accent text-bg font-medium" : "bg-slate-800 text-mute"}`,
+      onClick: () => { backdrop.remove(); if (isToday) navigate("today"); }
+    }, [isToday ? "Go to today" : "Close"]));
+  }
+
+  backdrop.appendChild(sheet);
+  document.body.appendChild(backdrop);
 }
 
 //-----------------------------------------------------------------------------
