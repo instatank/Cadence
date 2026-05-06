@@ -1,0 +1,4582 @@
+{
+  "_meta": {
+    "version": "2.0",
+    "schema": "cadence-exercise-v2",
+    "total_count": 103,
+    "contraindication_tag_legend": {
+      "right_anterior_shoulder": "Filter when user has right anterior shoulder issue (pressing, loaded pulls, front-round)",
+      "right_medial_ankle": "Filter when user has right medial ankle issue (heavy bilateral loading, aggressive dorsiflexion)"
+    },
+    "equipment_codes": [
+      "adjustable_dumbbells",
+      "barbell_plates",
+      "adjustable_bench",
+      "pull_up_bar",
+      "resistance_bands",
+      "cable_machine",
+      "foam_roller",
+      "yoga_mat",
+      "bodyweight"
+    ],
+    "changelog": "v2: Added cue field (one-line form note), video fields (video_url, video_source, video_duration_sec), new categories (mobility_movement, yoga_asana), McGill curl-up, TKE band",
+    "video_field_notes": "video_url null = pending. Populate in priority order: Phase 0 first (~55 exercises), then Phase 1, then Phase 2.",
+    "video_population_status": "Batches 1-2 complete: 19 unfamiliar/high-priority exercises (KOT mobility, Strength Side, McGill, TKE, calf rehab, hip CARs, basic yoga). 3 yoga (Triangle, Std/Seated Forward Fold) deferred to Batch 3 with resistance staples."
+  },
+  "exercises": [
+    {
+      "id": "db_goblet_squat",
+      "name": "Goblet Squat",
+      "category": "quad_dominant",
+      "movement_pattern": "squat",
+      "primary_movers": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "core",
+        "upper_back"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          12
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "bilateral_squat"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Knee-dominant, ankle-friendly with elevated heels if needed",
+      "cue": "Hold DB at chest, feet shoulder-width, knees track over toes, sit between heels.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_bulgarian_split_squat",
+      "name": "Bulgarian Split Squat",
+      "category": "quad_dominant",
+      "movement_pattern": "single_leg_squat",
+      "primary_movers": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "adductors",
+        "core"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "unilateral"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Single-leg keeps medial ankle load asymmetric and manageable",
+      "cue": "Rear foot elevated, front foot far enough out that knee stays over ankle.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_step_up",
+      "name": "DB Step-Up",
+      "category": "quad_dominant",
+      "movement_pattern": "single_leg_squat",
+      "primary_movers": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "calves",
+        "core"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          10,
+          12
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "unilateral"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Drive through front heel, don't push off back foot. Step down with control.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_front_squat",
+      "name": "DB Front Squat",
+      "category": "quad_dominant",
+      "movement_pattern": "squat",
+      "primary_movers": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "core",
+        "upper_back"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_0": [
+          6,
+          8
+        ],
+        "phase_1": [
+          8,
+          10
+        ],
+        "phase_2": [
+          8,
+          10
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "bilateral_squat"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Front-rack with DBs at shoulders \u2014 Phase 1+ to avoid anterior shoulder strain",
+      "cue": "DBs at shoulders, elbows up, chest tall. Sit straight down between heels.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_reverse_lunge",
+      "name": "DB Reverse Lunge",
+      "category": "quad_dominant",
+      "movement_pattern": "single_leg_squat",
+      "primary_movers": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "adductors",
+        "core"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          10,
+          12
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "unilateral"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Reverse step keeps tibial loading minimal vs forward lunge",
+      "cue": "Step back, drop straight down, drive through front heel to stand.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_walking_lunge",
+      "name": "DB Walking Lunge",
+      "category": "quad_dominant",
+      "movement_pattern": "single_leg_squat",
+      "primary_movers": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "adductors",
+        "calves"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "unilateral",
+        "ankle_dorsiflexion_loaded"
+      ],
+      "contraindication_tags": [
+        "right_medial_ankle"
+      ],
+      "phase_eligibility": [
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Forward step loads ankle dorsiflexion \u2014 gated until ankle cleared",
+      "cue": "Long steps, knee tracks over ankle, torso upright, controlled tempo.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_cyclist_squat",
+      "name": "Cyclist Squat (heels elevated)",
+      "category": "quad_dominant",
+      "movement_pattern": "squat",
+      "primary_movers": [
+        "quads"
+      ],
+      "secondary_movers": [
+        "glutes"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          15
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 75,
+      "position_tags": [
+        "bilateral_squat"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Elevated heels reduce ankle dorsiflexion demand \u2014 ankle-friendly",
+      "cue": "Heels elevated on plate, narrow stance, drop straight down, quads bias.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "band_spanish_squat",
+      "name": "Spanish Squat",
+      "category": "quad_dominant",
+      "movement_pattern": "squat_isometric",
+      "primary_movers": [
+        "quads"
+      ],
+      "secondary_movers": [
+        "glutes"
+      ],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          15
+        ],
+        "phase_1": [
+          10,
+          15
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "bilateral_squat",
+        "knee_friendly"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Band behind knees \u2014 joint-friendly quad isolation",
+      "cue": "Band behind knees, sit straight back, heels down, knees forward over toes.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_rdl",
+      "name": "DB Romanian Deadlift",
+      "category": "hinge_posterior",
+      "movement_pattern": "hinge",
+      "primary_movers": [
+        "hamstrings",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "lower_back",
+        "core"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "hinge"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "DBs at sides \u2014 no anterior shoulder load",
+      "cue": "Soft knees, hinge from hips, DBs slide down thighs, feel hamstrings stretch.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bb_rdl",
+      "name": "BB Romanian Deadlift",
+      "category": "hinge_posterior",
+      "movement_pattern": "hinge",
+      "primary_movers": [
+        "hamstrings",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "lower_back",
+        "lats"
+      ],
+      "equipment_required": [
+        "barbell_plates"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_0": [
+          6,
+          8
+        ],
+        "phase_1": [
+          6,
+          10
+        ],
+        "phase_2": [
+          6,
+          10
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "hinge",
+        "loaded_grip"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Bar held in front \u2014 minor anterior load via lats. Phase 1+ when shoulder cleared",
+      "cue": "Bar against legs, hinge back not down, neutral spine, hamstrings stretch at bottom.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_single_leg_rdl",
+      "name": "Single-Leg DB RDL",
+      "category": "hinge_posterior",
+      "movement_pattern": "hinge",
+      "primary_movers": [
+        "hamstrings",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "core",
+        "ankle_stabilizers"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          10
+        ],
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 75,
+      "position_tags": [
+        "unilateral",
+        "balance"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Trains ankle stability as a side effect \u2014 useful in rehab",
+      "cue": "Stand on one leg, hinge forward as back leg lifts. Slow, balance over speed.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bb_hip_thrust",
+      "name": "BB Hip Thrust",
+      "category": "hinge_posterior",
+      "movement_pattern": "hip_extension",
+      "primary_movers": [
+        "glutes"
+      ],
+      "secondary_movers": [
+        "hamstrings"
+      ],
+      "equipment_required": [
+        "barbell_plates",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "hip_extension"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Upper back on bench, bar over hips, drive heels, squeeze glutes at top.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_glute_bridge",
+      "name": "Glute Bridge",
+      "category": "hinge_posterior",
+      "movement_pattern": "hip_extension",
+      "primary_movers": [
+        "glutes"
+      ],
+      "secondary_movers": [
+        "hamstrings",
+        "core"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          12,
+          15
+        ],
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          15,
+          20
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "hip_extension"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Heels close to glutes, drive through heels, ribs down, squeeze hard at top.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bb_good_morning",
+      "name": "BB Good Morning",
+      "category": "hinge_posterior",
+      "movement_pattern": "hinge",
+      "primary_movers": [
+        "hamstrings",
+        "glutes",
+        "lower_back"
+      ],
+      "secondary_movers": [
+        "core"
+      ],
+      "equipment_required": [
+        "barbell_plates"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_1": [
+          8,
+          10
+        ],
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "hinge",
+        "spinal_loading"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Bar on upper traps \u2014 Phase 1+ once shoulder cleared",
+      "cue": "Bar on traps, soft knees, hinge back keeping neutral spine. Feel hamstrings.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cable_pull_through",
+      "name": "Cable Pull-Through",
+      "category": "hinge_posterior",
+      "movement_pattern": "hinge",
+      "primary_movers": [
+        "glutes",
+        "hamstrings"
+      ],
+      "secondary_movers": [
+        "core"
+      ],
+      "equipment_required": [
+        "cable_machine"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          15
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 75,
+      "position_tags": [
+        "hinge"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Joint-friendly hip hinge \u2014 minimal spinal load",
+      "cue": "Face away from cable, hinge back, drive hips forward to lock out.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "band_hip_thrust",
+      "name": "Banded Hip Thrust",
+      "category": "hinge_posterior",
+      "movement_pattern": "hip_extension",
+      "primary_movers": [
+        "glutes"
+      ],
+      "secondary_movers": [
+        "hamstrings"
+      ],
+      "equipment_required": [
+        "resistance_bands",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          12,
+          15
+        ],
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          12,
+          20
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "hip_extension"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Band over hips, drive heels, full lockout, slow descent.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bb_bench_press",
+      "name": "Barbell Bench Press",
+      "category": "horizontal_push",
+      "movement_pattern": "horizontal_push",
+      "primary_movers": [
+        "chest"
+      ],
+      "secondary_movers": [
+        "triceps",
+        "front_delts"
+      ],
+      "equipment_required": [
+        "barbell_plates",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          6,
+          10
+        ]
+      },
+      "rest_seconds": 150,
+      "position_tags": [
+        "press_anterior"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Feet planted, slight arch, bar to lower chest, elbows ~75\u00b0 from torso.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_bench_press",
+      "name": "DB Bench Press",
+      "category": "horizontal_push",
+      "movement_pattern": "horizontal_push",
+      "primary_movers": [
+        "chest"
+      ],
+      "secondary_movers": [
+        "triceps",
+        "front_delts"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "press_anterior"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "DBs lowered to chest level, elbows ~45\u00b0, press up and slightly together.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_pushup",
+      "name": "Push-Up",
+      "category": "horizontal_push",
+      "movement_pattern": "horizontal_push",
+      "primary_movers": [
+        "chest"
+      ],
+      "secondary_movers": [
+        "triceps",
+        "front_delts",
+        "core"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          15
+        ]
+      },
+      "rest_seconds": 75,
+      "position_tags": [
+        "press_anterior"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Hands under shoulders, body straight line, elbows ~45\u00b0, full ROM.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_incline_press",
+      "name": "Incline DB Press",
+      "category": "horizontal_push",
+      "movement_pattern": "horizontal_push_incline",
+      "primary_movers": [
+        "upper_chest",
+        "front_delts"
+      ],
+      "secondary_movers": [
+        "triceps"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "press_anterior"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Bench at 30\u00b0, lower DBs to upper chest, drive through chest not shoulders.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bb_incline_press",
+      "name": "Incline BB Press",
+      "category": "horizontal_push",
+      "movement_pattern": "horizontal_push_incline",
+      "primary_movers": [
+        "upper_chest",
+        "front_delts"
+      ],
+      "secondary_movers": [
+        "triceps"
+      ],
+      "equipment_required": [
+        "barbell_plates",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          6,
+          10
+        ]
+      },
+      "rest_seconds": 150,
+      "position_tags": [
+        "press_anterior"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Bench at 30\u00b0, bar to upper chest, elbows tucked moderately, controlled.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_decline_press",
+      "name": "Decline DB Press",
+      "category": "horizontal_push",
+      "movement_pattern": "horizontal_push_decline",
+      "primary_movers": [
+        "lower_chest"
+      ],
+      "secondary_movers": [
+        "triceps"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "press_anterior"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Decline bench, lower DBs to lower chest, focus on lower pec contraction.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cable_chest_fly",
+      "name": "Cable Chest Fly",
+      "category": "horizontal_push",
+      "movement_pattern": "horizontal_push_isolated",
+      "primary_movers": [
+        "chest"
+      ],
+      "secondary_movers": [
+        "front_delts"
+      ],
+      "equipment_required": [
+        "cable_machine"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "press_anterior"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Slight forward lean, soft elbows, sweep arms together, squeeze at center.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bb_ohp",
+      "name": "BB Overhead Press",
+      "category": "vertical_push",
+      "movement_pattern": "vertical_push",
+      "primary_movers": [
+        "front_delts",
+        "side_delts"
+      ],
+      "secondary_movers": [
+        "triceps",
+        "upper_chest"
+      ],
+      "equipment_required": [
+        "barbell_plates"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          5,
+          8
+        ]
+      },
+      "rest_seconds": 150,
+      "position_tags": [
+        "press_overhead"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Bar at shoulders, brace core, press straight up, head through at lockout.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_shoulder_press",
+      "name": "DB Shoulder Press",
+      "category": "vertical_push",
+      "movement_pattern": "vertical_push",
+      "primary_movers": [
+        "front_delts",
+        "side_delts"
+      ],
+      "secondary_movers": [
+        "triceps"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "press_overhead"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "DBs at shoulder level, neutral or slight pronation, press up. No lower-back arch.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_seated_press",
+      "name": "Seated DB Press",
+      "category": "vertical_push",
+      "movement_pattern": "vertical_push",
+      "primary_movers": [
+        "front_delts",
+        "side_delts"
+      ],
+      "secondary_movers": [
+        "triceps"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "press_overhead"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Back supported, DBs at shoulder height, press up, full ROM at top.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_arnold_press",
+      "name": "Arnold Press",
+      "category": "vertical_push",
+      "movement_pattern": "vertical_push_rotational",
+      "primary_movers": [
+        "front_delts",
+        "side_delts"
+      ],
+      "secondary_movers": [
+        "triceps"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          10,
+          12
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "press_overhead",
+        "rotational"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Start palms facing you, rotate as you press up, end palms forward overhead.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_lateral_raise",
+      "name": "DB Lateral Raise",
+      "category": "vertical_push",
+      "movement_pattern": "abduction",
+      "primary_movers": [
+        "side_delts"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_2": [
+          12,
+          20
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "shoulder_abduction"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "Side delt isolation \u2014 gated until shoulder cleared due to abduction load",
+      "cue": "Slight forward lean, elbows lead, raise to shoulder height, pinky slightly up.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bb_bent_row",
+      "name": "BB Bent-Over Row",
+      "category": "horizontal_pull",
+      "movement_pattern": "horizontal_pull",
+      "primary_movers": [
+        "lats",
+        "rhomboids",
+        "mid_traps"
+      ],
+      "secondary_movers": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment_required": [
+        "barbell_plates"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          6,
+          10
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Hinge to ~45\u00b0, bar to lower ribs, pull elbows back, neutral spine.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_single_arm_row",
+      "name": "DB Single-Arm Row",
+      "category": "horizontal_pull",
+      "movement_pattern": "horizontal_pull",
+      "primary_movers": [
+        "lats",
+        "rhomboids"
+      ],
+      "secondary_movers": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 75,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "One hand on bench, row DB to hip, elbow back, squeeze lat at top.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_chest_supported_row",
+      "name": "Chest-Supported DB Row",
+      "category": "horizontal_pull",
+      "movement_pattern": "horizontal_pull",
+      "primary_movers": [
+        "lats",
+        "rhomboids",
+        "mid_traps"
+      ],
+      "secondary_movers": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 75,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Chest on incline bench, row DBs to ribs, squeeze shoulder blades together.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cable_seated_row",
+      "name": "Cable Seated Row",
+      "category": "horizontal_pull",
+      "movement_pattern": "horizontal_pull",
+      "primary_movers": [
+        "lats",
+        "rhomboids",
+        "mid_traps"
+      ],
+      "secondary_movers": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment_required": [
+        "cable_machine"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 75,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Sit tall, pull handle to lower ribs, lead with elbows, squeeze mid-back.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_inverted_row",
+      "name": "Inverted Row",
+      "category": "horizontal_pull",
+      "movement_pattern": "horizontal_pull",
+      "primary_movers": [
+        "lats",
+        "rhomboids"
+      ],
+      "secondary_movers": [
+        "biceps",
+        "rear_delts",
+        "core"
+      ],
+      "equipment_required": [
+        "barbell_plates"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Bar at hip height, body straight, pull chest to bar, squeeze blades.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bb_pendlay_row",
+      "name": "Pendlay Row",
+      "category": "horizontal_pull",
+      "movement_pattern": "horizontal_pull_explosive",
+      "primary_movers": [
+        "lats",
+        "rhomboids",
+        "mid_traps"
+      ],
+      "secondary_movers": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment_required": [
+        "barbell_plates"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          5,
+          8
+        ]
+      },
+      "rest_seconds": 150,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Bar from floor each rep, explosive pull to lower chest, controlled lower.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bb_meadows_row",
+      "name": "Meadows Row",
+      "category": "horizontal_pull",
+      "movement_pattern": "horizontal_pull",
+      "primary_movers": [
+        "lats",
+        "rhomboids"
+      ],
+      "secondary_movers": [
+        "biceps",
+        "rear_delts"
+      ],
+      "equipment_required": [
+        "barbell_plates"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "Landmine setup with one end of barbell",
+      "cue": "Landmine setup, stagger stance, row to hip, full stretch at bottom.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_pullup",
+      "name": "Pull-Up",
+      "category": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "primary_movers": [
+        "lats"
+      ],
+      "secondary_movers": [
+        "biceps",
+        "rhomboids"
+      ],
+      "equipment_required": [
+        "pull_up_bar"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          5,
+          10
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Dead hang start, pull chest to bar, full ROM, controlled descent.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_chinup",
+      "name": "Chin-Up",
+      "category": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "primary_movers": [
+        "lats",
+        "biceps"
+      ],
+      "secondary_movers": [
+        "rhomboids"
+      ],
+      "equipment_required": [
+        "pull_up_bar"
+      ],
+      "fatigue_cost": "high",
+      "rep_ranges": {
+        "phase_2": [
+          5,
+          10
+        ]
+      },
+      "rest_seconds": 120,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Underhand grip, pull chest to bar, biceps + lats engaged, full lockout at bottom.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cable_lat_pulldown",
+      "name": "Lat Pulldown",
+      "category": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "primary_movers": [
+        "lats"
+      ],
+      "secondary_movers": [
+        "biceps",
+        "rhomboids"
+      ],
+      "equipment_required": [
+        "cable_machine"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 90,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Lean back slightly, pull bar to upper chest, drive elbows down.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cable_straight_arm_pulldown",
+      "name": "Straight-Arm Pulldown",
+      "category": "vertical_pull",
+      "movement_pattern": "shoulder_extension",
+      "primary_movers": [
+        "lats"
+      ],
+      "secondary_movers": [
+        "teres_major"
+      ],
+      "equipment_required": [
+        "cable_machine"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Slight forward lean, arms straight, pull bar to thighs in arc.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "band_pulldown",
+      "name": "Banded Pulldown",
+      "category": "vertical_pull",
+      "movement_pattern": "vertical_pull",
+      "primary_movers": [
+        "lats"
+      ],
+      "secondary_movers": [
+        "biceps"
+      ],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Anchor band overhead, pull straight down, lead with elbows.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "band_pull_apart",
+      "name": "Band Pull-Apart",
+      "category": "scap_postural",
+      "movement_pattern": "horizontal_pull_isolated",
+      "primary_movers": [
+        "rear_delts",
+        "rhomboids",
+        "mid_traps"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          12,
+          15
+        ],
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          15,
+          20
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "scap_retraction"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Foundational scap activation \u2014 keep daily",
+      "cue": "Arms straight at chest height, pull band apart, lead with shoulder blades.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cable_face_pull",
+      "name": "Face Pull",
+      "category": "scap_postural",
+      "movement_pattern": "horizontal_pull_isolated",
+      "primary_movers": [
+        "rear_delts",
+        "external_rotators"
+      ],
+      "secondary_movers": [
+        "mid_traps"
+      ],
+      "equipment_required": [
+        "cable_machine"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          12,
+          15
+        ],
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "scap_retraction",
+        "external_rotation"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Light load, high reps \u2014 shoulder health staple",
+      "cue": "Pull rope to forehead, elbows high, external rotate at end. Light load.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "band_face_pull",
+      "name": "Face Pull (band)",
+      "category": "scap_postural",
+      "movement_pattern": "horizontal_pull_isolated",
+      "primary_movers": [
+        "rear_delts",
+        "external_rotators"
+      ],
+      "secondary_movers": [
+        "mid_traps"
+      ],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          12,
+          15
+        ],
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "scap_retraction",
+        "external_rotation"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Same as cable: pull to forehead, elbows high, external rotation. Slow.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_prone_y_raise",
+      "name": "Prone Y-Raise",
+      "category": "scap_postural",
+      "movement_pattern": "scap_upward_rotation",
+      "primary_movers": [
+        "lower_traps",
+        "rear_delts"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "scap_upward_rotation"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Light DBs only (1\u20133kg)",
+      "cue": "Lying face-down, very light DBs, raise arms to Y, thumbs up.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_prone_t_raise",
+      "name": "Prone T-Raise",
+      "category": "scap_postural",
+      "movement_pattern": "horizontal_abduction",
+      "primary_movers": [
+        "rear_delts",
+        "rhomboids",
+        "mid_traps"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "scap_retraction"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Light DBs only",
+      "cue": "Lying face-down, light DBs, raise arms straight out to T, thumbs up.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_prone_w_raise",
+      "name": "Prone W-Raise",
+      "category": "scap_postural",
+      "movement_pattern": "external_rotation",
+      "primary_movers": [
+        "lower_traps",
+        "rear_delts"
+      ],
+      "secondary_movers": [
+        "external_rotators"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "scap_retraction",
+        "external_rotation"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Light DBs only",
+      "cue": "Lying face-down, light DBs, elbows bent ~90\u00b0, raise into W.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_rear_delt_fly",
+      "name": "Rear Delt Fly",
+      "category": "scap_postural",
+      "movement_pattern": "horizontal_pull_isolated",
+      "primary_movers": [
+        "rear_delts"
+      ],
+      "secondary_movers": [
+        "rhomboids",
+        "mid_traps"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          15
+        ],
+        "phase_1": [
+          10,
+          15
+        ],
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "scap_retraction"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Hinge forward, soft elbows, raise DBs out to sides, squeeze rear delts.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cable_reverse_fly",
+      "name": "Reverse Cable Fly",
+      "category": "scap_postural",
+      "movement_pattern": "horizontal_pull_isolated",
+      "primary_movers": [
+        "rear_delts"
+      ],
+      "secondary_movers": [
+        "rhomboids",
+        "mid_traps"
+      ],
+      "equipment_required": [
+        "cable_machine"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          12,
+          15
+        ],
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "scap_retraction"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Cables at chest height, arms cross at start, sweep wide, squeeze.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_scap_pullup",
+      "name": "Scapular Pull-Up",
+      "category": "scap_postural",
+      "movement_pattern": "scap_depression",
+      "primary_movers": [
+        "lower_traps",
+        "lats"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "pull_up_bar"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "scap_depression",
+        "decompression"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Dead hang + pull shoulders down only \u2014 no elbow flexion. Shoulder-friendly",
+      "cue": "Dead hang, depress shoulder blades down/back, no elbow bend. Reset.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_dead_hang",
+      "name": "Dead Hang",
+      "category": "scap_postural",
+      "movement_pattern": "decompression",
+      "primary_movers": [
+        "grip"
+      ],
+      "secondary_movers": [
+        "shoulders"
+      ],
+      "equipment_required": [
+        "pull_up_bar"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          20,
+          30
+        ],
+        "phase_1": [
+          20,
+          30
+        ],
+        "phase_2": [
+          30,
+          60
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "decompression"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Time in seconds. Spinal + shoulder decompression",
+      "cue": "Pure hang from bar, relaxed shoulders, breathe, decompress spine.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_wall_slide",
+      "name": "Wall Slide",
+      "category": "scap_postural",
+      "movement_pattern": "scap_upward_rotation",
+      "primary_movers": [
+        "lower_traps",
+        "serratus"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "scap_upward_rotation",
+        "postural"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Forearms on wall, slide hands up while keeping forearms in contact.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "band_external_rotation",
+      "name": "Banded External Rotation",
+      "category": "scap_postural",
+      "movement_pattern": "external_rotation",
+      "primary_movers": [
+        "external_rotators"
+      ],
+      "secondary_movers": [
+        "rear_delts"
+      ],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          12,
+          15
+        ],
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "external_rotation"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Rotator cuff staple \u2014 keep light",
+      "cue": "Elbow at side, 90\u00b0 bend, rotate forearm out against band. Light.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_tib_raise",
+      "name": "Tibialis Anterior Raise",
+      "category": "calf_lower_leg",
+      "movement_pattern": "dorsiflexion",
+      "primary_movers": [
+        "tibialis_anterior"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          15,
+          20
+        ],
+        "phase_1": [
+          15,
+          20
+        ],
+        "phase_2": [
+          15,
+          25
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "dorsiflexion"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Heels-against-wall, lift toes. Critical for ankle balance",
+      "cue": "Heels against wall, lift toes up high, hold, lower with control.",
+      "video_url": "https://www.youtube.com/watch?v=VzIcGAgBiaM",
+      "video_source": "KOT / ATG system demo",
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_eccentric_calf_raise",
+      "name": "Eccentric Calf Raise (single-leg, light)",
+      "category": "calf_lower_leg",
+      "movement_pattern": "plantarflexion_eccentric",
+      "primary_movers": [
+        "gastrocnemius",
+        "soleus"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "bodyweight",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "plantarflexion"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "3-second descent, bodyweight only in Phase 0",
+      "cue": "On step edge, rise on both feet, lower SLOWLY (3 sec) on one foot.",
+      "video_url": "https://www.youtube.com/watch?v=d2GgSoHvIXo",
+      "video_source": "Kinetic U Sports Rehab",
+      "video_duration_sec": null
+    },
+    {
+      "id": "band_iso_tib_post",
+      "name": "Isometric Tibialis Posterior Hold",
+      "category": "calf_lower_leg",
+      "movement_pattern": "isometric",
+      "primary_movers": [
+        "tibialis_posterior"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          3,
+          5
+        ],
+        "phase_1": [
+          3,
+          5
+        ],
+        "phase_2": [
+          3,
+          5
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "isometric_hold"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": true,
+      "notes": "30-sec holds. Direct rehab for medial ankle. Per April clinical plan",
+      "cue": "Foot turned in against band, hold inversion 30 sec. No movement, just hold.",
+      "video_url": "https://www.youtube.com/watch?v=MIRYOo1YLUs",
+      "video_source": "Tibialis Posterior band tutorial",
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_standing_calf_raise",
+      "name": "Standing DB Calf Raise",
+      "category": "calf_lower_leg",
+      "movement_pattern": "plantarflexion",
+      "primary_movers": [
+        "gastrocnemius",
+        "soleus"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          12,
+          20
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "plantarflexion",
+        "loaded_calf"
+      ],
+      "contraindication_tags": [
+        "right_medial_ankle"
+      ],
+      "phase_eligibility": [
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Loaded calf work \u2014 gated until ankle cleared",
+      "cue": "On step edge, full stretch at bottom, full contraction at top. Pause.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_seated_calf_raise",
+      "name": "Seated DB Calf Raise",
+      "category": "calf_lower_leg",
+      "movement_pattern": "plantarflexion",
+      "primary_movers": [
+        "soleus"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "adjustable_dumbbells",
+        "adjustable_bench"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          15,
+          20
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "plantarflexion",
+        "loaded_calf"
+      ],
+      "contraindication_tags": [
+        "right_medial_ankle"
+      ],
+      "phase_eligibility": [
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Soleus focus, full ROM, slow tempo, pause at top contraction.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_single_leg_balance",
+      "name": "Single-Leg Balance",
+      "category": "calf_lower_leg",
+      "movement_pattern": "isometric_balance",
+      "primary_movers": [
+        "ankle_stabilizers",
+        "tibialis_posterior"
+      ],
+      "secondary_movers": [
+        "glutes",
+        "core"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          3,
+          5
+        ],
+        "phase_1": [
+          3,
+          5
+        ],
+        "phase_2": [
+          3,
+          5
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "balance",
+        "ankle_proprioception"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": true,
+      "notes": "30\u201345 sec holds. Eyes-open progression first",
+      "cue": "Stand on one leg, soft knee, gaze forward, breathe. Progress to eyes closed.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_dead_bug",
+      "name": "Dead Bug",
+      "category": "core",
+      "movement_pattern": "anti_extension",
+      "primary_movers": [
+        "core"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "bodyweight",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          10,
+          12
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "anti_extension"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "On back, opposite arm + leg extend, lower back stays pressed to floor.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_bird_dog",
+      "name": "Bird Dog",
+      "category": "core",
+      "movement_pattern": "anti_rotation",
+      "primary_movers": [
+        "core",
+        "spinal_erectors"
+      ],
+      "secondary_movers": [
+        "glutes"
+      ],
+      "equipment_required": [
+        "bodyweight",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          10,
+          12
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "anti_rotation"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "On hands and knees, opposite arm + leg extend, brace core, no rotation.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "band_pallof_press",
+      "name": "Pallof Press",
+      "category": "core",
+      "movement_pattern": "anti_rotation",
+      "primary_movers": [
+        "core",
+        "obliques"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "anti_rotation"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Band at side, press straight out, resist rotation, hold, return.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_side_plank",
+      "name": "Side Plank",
+      "category": "core",
+      "movement_pattern": "anti_lateral_flexion",
+      "primary_movers": [
+        "obliques",
+        "core"
+      ],
+      "secondary_movers": [
+        "glutes"
+      ],
+      "equipment_required": [
+        "bodyweight",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          3,
+          5
+        ],
+        "phase_1": [
+          3,
+          5
+        ],
+        "phase_2": [
+          3,
+          5
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "anti_lateral_flexion"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Time in 30\u201345 sec holds",
+      "cue": "Side support on forearm, hips up, body straight line, breathe.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_hollow_hold",
+      "name": "Hollow Hold",
+      "category": "core",
+      "movement_pattern": "anti_extension",
+      "primary_movers": [
+        "core"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "bodyweight",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          3,
+          5
+        ],
+        "phase_1": [
+          3,
+          5
+        ],
+        "phase_2": [
+          3,
+          5
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "anti_extension"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "20\u201340 sec holds",
+      "cue": "On back, lower back pressed down, arms + legs raised, hold tension.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "bw_hanging_knee_raise",
+      "name": "Hanging Knee Raise",
+      "category": "core",
+      "movement_pattern": "hip_flexion",
+      "primary_movers": [
+        "core",
+        "hip_flexors"
+      ],
+      "secondary_movers": [
+        "grip"
+      ],
+      "equipment_required": [
+        "pull_up_bar"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "loaded_pull"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "Dead hang loads shoulders \u2014 gated to Phase 2",
+      "cue": "Dead hang, raise knees to chest, no swing, controlled lower.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_curl",
+      "name": "DB Curl",
+      "category": "arms_isolation",
+      "movement_pattern": "elbow_flexion",
+      "primary_movers": [
+        "biceps"
+      ],
+      "secondary_movers": [
+        "forearms"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Standing or seated",
+      "cue": "Elbows pinned to sides, curl DB up, squeeze biceps, slow descent.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_hammer_curl",
+      "name": "Hammer Curl",
+      "category": "arms_isolation",
+      "movement_pattern": "elbow_flexion",
+      "primary_movers": [
+        "biceps",
+        "brachialis"
+      ],
+      "secondary_movers": [
+        "forearms"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          8,
+          12
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Neutral grip throughout, elbows at sides, curl up, squeeze, lower slow.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cable_curl",
+      "name": "Cable Curl",
+      "category": "arms_isolation",
+      "movement_pattern": "elbow_flexion",
+      "primary_movers": [
+        "biceps"
+      ],
+      "secondary_movers": [
+        "forearms"
+      ],
+      "equipment_required": [
+        "cable_machine"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Cable at lowest setting, elbows pinned, curl up with constant tension.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cable_tricep_pushdown",
+      "name": "Tricep Pushdown",
+      "category": "arms_isolation",
+      "movement_pattern": "elbow_extension",
+      "primary_movers": [
+        "triceps"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "cable_machine"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "Elbow at side \u2014 no shoulder loading",
+      "cue": "Elbows pinned to sides, push down, lock out, slow return.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "band_tricep_pushdown",
+      "name": "Banded Tricep Pushdown",
+      "category": "arms_isolation",
+      "movement_pattern": "elbow_extension",
+      "primary_movers": [
+        "triceps"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          12,
+          15
+        ],
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "Anchor band overhead, elbows pinned, push down, full lockout.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "db_overhead_tricep_ext",
+      "name": "Overhead Tricep Extension",
+      "category": "arms_isolation",
+      "movement_pattern": "elbow_extension",
+      "primary_movers": [
+        "triceps"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "press_overhead"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "notes": "Overhead position loads anterior shoulder \u2014 gated",
+      "cue": "DB overhead, lower behind head, elbows close to ears, extend up.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "foam_roll_thoracic",
+      "name": "Foam Roll: Thoracic",
+      "category": "recovery_mobility",
+      "movement_pattern": "soft_tissue",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "foam_roller",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "2 min. Critical for shoulder rehab",
+      "cue": "Roller across upper back, arms crossed, slow rolls T1-T12.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "foam_roll_lats",
+      "name": "Foam Roll: Lats",
+      "category": "recovery_mobility",
+      "movement_pattern": "soft_tissue",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "foam_roller",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "1\u20132 min per side",
+      "cue": "Lie on side, roller under armpit, slow rolls along lat. Both sides.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "foam_roll_glutes",
+      "name": "Foam Roll: Glutes",
+      "category": "recovery_mobility",
+      "movement_pattern": "soft_tissue",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "foam_roller",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "1\u20132 min per side",
+      "cue": "Sit on roller, cross ankle to opposite knee, lean into glute. Both sides.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "foam_roll_quads",
+      "name": "Foam Roll: Quads",
+      "category": "recovery_mobility",
+      "movement_pattern": "soft_tissue",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "foam_roller",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "1\u20132 min per side",
+      "cue": "Face down, roller under quads, support on forearms, slow rolls.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "foam_roll_it_band",
+      "name": "Foam Roll: IT Band",
+      "category": "recovery_mobility",
+      "movement_pattern": "soft_tissue",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "foam_roller",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "1\u20132 min per side",
+      "cue": "Lie on side, roller along outer thigh hip-to-knee. Slow, controlled.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "foam_roll_calves",
+      "name": "Foam Roll: Calves",
+      "category": "recovery_mobility",
+      "movement_pattern": "soft_tissue",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "foam_roller",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "1\u20132 min per side. Avoid medial ankle area directly",
+      "cue": "Sit, roller under calf, lift hips, roll. Avoid medial ankle area.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "stretch_90_90_hip",
+      "name": "90/90 Hip Stretch",
+      "category": "recovery_mobility",
+      "movement_pattern": "stretch",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "hip_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "1 min per side",
+      "cue": "Sit with both legs at 90\u00b0 angles, lean forward over front leg.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "stretch_couch",
+      "name": "Couch Stretch",
+      "category": "recovery_mobility",
+      "movement_pattern": "stretch",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "hip_flexor_stretch"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "1 min per side",
+      "cue": "Back foot on couch/wall, front knee bent, hips squared forward.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "stretch_cat_cow",
+      "name": "Cat-Cow",
+      "category": "recovery_mobility",
+      "movement_pattern": "stretch",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          8,
+          10
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "spinal_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "",
+      "cue": "On hands and knees, alternate spinal flexion and extension, breathe.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "stretch_childs_pose_side",
+      "name": "Child's Pose with Side Reach",
+      "category": "recovery_mobility",
+      "movement_pattern": "stretch",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "lat_stretch"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "notes": "30\u201360 sec per side. Lat decompression helps shoulder",
+      "cue": "Knees wide, sit back on heels, walk hands to one side, hold.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "physio_wall_pushup_wide",
+      "name": "Wide Wall Push-Up",
+      "category": "physio_specific",
+      "movement_pattern": "horizontal_push_unloaded",
+      "primary_movers": [
+        "chest",
+        "serratus"
+      ],
+      "secondary_movers": [
+        "scap_stabilizers"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          15
+        ],
+        "phase_2": [
+          10,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "scap_protraction",
+        "physio"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": true,
+      "notes": "Per current physio prescription. Wide hand placement, full ROM",
+      "cue": "Hands wide on wall, push-up with focus on scap protraction at top.",
+      "video_url": "https://www.youtube.com/watch?v=QGCW-jL1O4s",
+      "video_source": "Tim Keeley / Physio REHAB",
+      "video_duration_sec": null
+    },
+    {
+      "id": "physio_breaststroke_prone",
+      "name": "Breaststroke Prone (BW)",
+      "category": "physio_specific",
+      "movement_pattern": "scap_retraction_dynamic",
+      "primary_movers": [
+        "rear_delts",
+        "rhomboids",
+        "lower_traps"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "bodyweight",
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          15,
+          20
+        ],
+        "phase_1": [
+          15,
+          20
+        ],
+        "phase_2": [
+          15,
+          20
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "scap_retraction",
+        "physio"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": true,
+      "notes": "Per current physio prescription. Lying prone, breaststroke arm pattern",
+      "cue": "Lie face down, breaststroke arm pattern with scap retraction emphasis.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "physio_eccentric_tib_post",
+      "name": "Eccentric Tibialis Posterior",
+      "category": "physio_specific",
+      "movement_pattern": "eccentric_loading",
+      "primary_movers": [
+        "tibialis_posterior"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          10,
+          12
+        ],
+        "phase_1": [
+          10,
+          12
+        ],
+        "phase_2": [
+          10,
+          12
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "physio",
+        "ankle_rehab"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": true,
+      "notes": "Per April clinical plan. 3-sec eccentric resisted inversion",
+      "cue": "Foot in band, slow 3-sec eccentric of inversion. Light load.",
+      "video_url": "https://www.youtube.com/watch?v=XBvfk3zwiiE",
+      "video_source": "Physiotutors",
+      "video_duration_sec": null
+    },
+    {
+      "id": "physio_neural_floss_tibial",
+      "name": "Tibial Nerve Glide",
+      "category": "physio_specific",
+      "movement_pattern": "neural_glide",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          10
+        ],
+        "phase_2": [
+          8,
+          10
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "physio",
+        "neural_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": true,
+      "notes": "Per April clinical plan. Gentle, no provocation",
+      "cue": "Sit, extend leg, gentle dorsiflex + lean back. No pain. 8-10 reps.",
+      "video_url": "https://www.youtube.com/watch?v=DmIh9a6H5Kw",
+      "video_source": "Tibial Nerve / Tarsal Tunnel exercises",
+      "video_duration_sec": null
+    },
+    {
+      "id": "physio_contrast_bath",
+      "name": "Contrast Bath (shoulder + ankle)",
+      "category": "physio_specific",
+      "movement_pattern": "recovery_protocol",
+      "primary_movers": [],
+      "secondary_movers": [],
+      "equipment_required": [],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          3,
+          4
+        ],
+        "phase_1": [
+          3,
+          4
+        ],
+        "phase_2": [
+          3,
+          4
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "physio",
+        "recovery"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": true,
+      "notes": "Cold 2 min / warm 3 min, 3\u20134 cycles, end on cold. Per April protocol",
+      "cue": "Cold 2 min / warm 3 min, 3-4 cycles, end on cold. Both injuries.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "kot_atg_split_squat",
+      "name": "ATG Split Squat",
+      "category": "mobility_movement",
+      "movement_pattern": "deep_knee_flexion",
+      "primary_movers": [
+        "quads",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "adductors",
+        "knee_stabilizers"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "medium",
+      "rep_ranges": {
+        "phase_0": [
+          5,
+          8
+        ],
+        "phase_1": [
+          6,
+          10
+        ],
+        "phase_2": [
+          8,
+          10
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "unilateral",
+        "deep_knee_flexion",
+        "knee_resilience"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Front knee tracks past toes, back knee on ground, drop hips low. KOT staple.",
+      "notes": "Knees Over Toes Guy core movement. Builds knee resilience. Start no-load.",
+      "video_url": "https://www.youtube.com/watch?v=g6KrlrOq4mw",
+      "video_source": "Knees Over Toes Guy",
+      "video_duration_sec": null
+    },
+    {
+      "id": "kot_patrick_step",
+      "name": "Patrick Step (KOT)",
+      "category": "mobility_movement",
+      "movement_pattern": "single_leg_squat",
+      "primary_movers": [
+        "quads",
+        "vmo"
+      ],
+      "secondary_movers": [
+        "glutes",
+        "knee_stabilizers"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          8,
+          10
+        ],
+        "phase_1": [
+          8,
+          12
+        ],
+        "phase_2": [
+          10,
+          12
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "unilateral",
+        "vmo_emphasis",
+        "knee_resilience"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Stand on step, lower opposite heel slowly toward floor, drive back up.",
+      "notes": "VMO-focused, ACL-deficient knee staple. KOT progression.",
+      "video_url": "https://www.youtube.com/watch?v=16AjEFQADvI",
+      "video_source": "ATG (KOT system) demonstration",
+      "video_duration_sec": null
+    },
+    {
+      "id": "ss_cossack_squat",
+      "name": "Cossack Squat",
+      "category": "mobility_movement",
+      "movement_pattern": "lateral_squat",
+      "primary_movers": [
+        "adductors",
+        "quads",
+        "glutes"
+      ],
+      "secondary_movers": [
+        "hip_mobility"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          4,
+          6
+        ],
+        "phase_1": [
+          6,
+          8
+        ],
+        "phase_2": [
+          6,
+          10
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "lateral",
+        "hip_mobility",
+        "deep_knee_flexion"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Wide stance, shift weight to one side, sit deep, other leg straight. Slow.",
+      "notes": "Strength Side hip mobility staple. Phase 1+ for knee tolerance.",
+      "video_url": "https://www.youtube.com/watch?v=tpczTeSkHz0",
+      "video_source": "FitnessFAQs",
+      "video_duration_sec": null
+    },
+    {
+      "id": "ss_jefferson_curl",
+      "name": "Jefferson Curl (light)",
+      "category": "mobility_movement",
+      "movement_pattern": "spinal_flexion_loaded",
+      "primary_movers": [
+        "spinal_erectors",
+        "hamstrings"
+      ],
+      "secondary_movers": [
+        "posterior_chain"
+      ],
+      "equipment_required": [
+        "adjustable_dumbbells"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_2": [
+          5,
+          8
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "spinal_flexion",
+        "posterior_chain_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "cue": "Light DB, roll spine down vertebra by vertebra, return same way. Very light.",
+      "notes": "Strength Side staple. Spinal flexion under light load. Phase 2 only given back history.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "ss_hip_cars",
+      "name": "Hip CARs (Controlled Articular Rotations)",
+      "category": "mobility_movement",
+      "movement_pattern": "joint_articulation",
+      "primary_movers": [
+        "hip_capsule"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          3,
+          5
+        ],
+        "phase_1": [
+          3,
+          5
+        ],
+        "phase_2": [
+          3,
+          5
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "joint_health",
+        "hip_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "On all fours, lift one leg, draw biggest circle possible at hip. Slow + controlled.",
+      "notes": "FRC-style. 3-5 reps each direction per side.",
+      "video_url": "https://www.youtube.com/watch?v=5kM-o61Z14I",
+      "video_source": "Kinetic Sports Rehab",
+      "video_duration_sec": null
+    },
+    {
+      "id": "ss_shoulder_cars",
+      "name": "Shoulder CARs",
+      "category": "mobility_movement",
+      "movement_pattern": "joint_articulation",
+      "primary_movers": [
+        "shoulder_capsule"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          3,
+          5
+        ],
+        "phase_1": [
+          3,
+          5
+        ],
+        "phase_2": [
+          3,
+          5
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "joint_health",
+        "shoulder_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Stand tall, draw biggest circle possible with arm. Slow. Stop at any pinch.",
+      "notes": "Shoulder-friendly when done slowly. Stop short of provocation in Phase 0.",
+      "video_url": "https://www.youtube.com/watch?v=CLWFwun1BfQ",
+      "video_source": "Kinetic Sports Rehab",
+      "video_duration_sec": null
+    },
+    {
+      "id": "ss_deep_squat_hold",
+      "name": "Deep Squat Hold",
+      "category": "mobility_movement",
+      "movement_pattern": "isometric_hold",
+      "primary_movers": [
+        "hip_mobility",
+        "ankle_mobility"
+      ],
+      "secondary_movers": [
+        "adductors",
+        "spinal_erectors"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "hip_mobility",
+        "ankle_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Sit deep into squat, heels down, elbows inside knees, breathe. 30-60 sec.",
+      "notes": "Time-based: 30-60 sec hold. Ankle and hip opener. Use rack for balance if needed.",
+      "video_url": "https://www.youtube.com/watch?v=bjV07PRoGGo",
+      "video_source": "Squat University",
+      "video_duration_sec": null
+    },
+    {
+      "id": "ss_worlds_greatest_stretch",
+      "name": "World's Greatest Stretch",
+      "category": "mobility_movement",
+      "movement_pattern": "compound_stretch",
+      "primary_movers": [
+        "hip_flexors",
+        "thoracic_spine"
+      ],
+      "secondary_movers": [
+        "hamstrings",
+        "calves"
+      ],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          3,
+          5
+        ],
+        "phase_1": [
+          3,
+          5
+        ],
+        "phase_2": [
+          3,
+          5
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "hip_mobility",
+        "thoracic_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Lunge step, hand inside front foot, rotate up to ceiling, alternate sides.",
+      "notes": "Full-body warm-up staple. Slow, breathe through each rotation.",
+      "video_url": "https://www.youtube.com/watch?v=-CiWQ2IvY34",
+      "video_source": "Squat University",
+      "video_duration_sec": null
+    },
+    {
+      "id": "yoga_downward_dog_supported",
+      "name": "Downward Dog (chest-supported variation)",
+      "category": "yoga_asana",
+      "movement_pattern": "stretch",
+      "primary_movers": [
+        "hamstrings",
+        "calves",
+        "shoulders"
+      ],
+      "secondary_movers": [
+        "thoracic_spine"
+      ],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "loaded_pull",
+        "shoulder_flexion_loaded"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "cue": "Hands and feet on mat, hips up, push floor away. Bend knees if hamstrings tight.",
+      "notes": "Standard downward dog loads anterior shoulder. Phase 2 only after shoulder cleared.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "yoga_pigeon_pose",
+      "name": "Pigeon Pose",
+      "category": "yoga_asana",
+      "movement_pattern": "stretch",
+      "primary_movers": [
+        "glutes",
+        "hip_external_rotators"
+      ],
+      "secondary_movers": [
+        "hip_flexors"
+      ],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "hip_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Front shin parallel to top of mat, back leg extended, lean over front leg. 60 sec/side.",
+      "notes": "Deep hip opener. Hold 60 sec per side.",
+      "video_url": "https://www.youtube.com/watch?v=KfElAgr72Vo",
+      "video_source": "Tom Merrick (Bodyweight Warrior) \u2014 Hip Mobility Routine V3 (covers pigeon)",
+      "video_duration_sec": null
+    },
+    {
+      "id": "yoga_warrior_2",
+      "name": "Warrior II",
+      "category": "yoga_asana",
+      "movement_pattern": "stretch",
+      "primary_movers": [
+        "hip_flexors",
+        "quads"
+      ],
+      "secondary_movers": [
+        "adductors",
+        "shoulders"
+      ],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "hip_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Wide stance, front knee over ankle, arms extended T, gaze over front hand. 30-45 sec/side.",
+      "notes": "Hip opener + leg endurance. 30-45 sec per side.",
+      "video_url": "https://www.youtube.com/watch?v=_f8qSEUYrdU",
+      "video_source": "Yoga Warrior 2 alignment breakdown",
+      "video_duration_sec": null
+    },
+    {
+      "id": "yoga_triangle",
+      "name": "Triangle Pose",
+      "category": "yoga_asana",
+      "movement_pattern": "stretch",
+      "primary_movers": [
+        "hamstrings",
+        "obliques"
+      ],
+      "secondary_movers": [
+        "adductors"
+      ],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "lateral_chain_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Wide stance, hinge sideways over front leg, top hand up, gaze up. 30 sec/side.",
+      "notes": "Side body opener. Use block under bottom hand if hamstrings tight.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "yoga_standing_forward_fold",
+      "name": "Standing Forward Fold",
+      "category": "yoga_asana",
+      "movement_pattern": "stretch",
+      "primary_movers": [
+        "hamstrings",
+        "lower_back"
+      ],
+      "secondary_movers": [
+        "calves"
+      ],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "posterior_chain_stretch"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Hinge from hips, soft knees, hang heavy. Don't force depth. 30-45 sec.",
+      "notes": "Bend knees as much as needed. Spinal decompression bonus.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "yoga_seated_forward_fold",
+      "name": "Seated Forward Fold",
+      "category": "yoga_asana",
+      "movement_pattern": "stretch",
+      "primary_movers": [
+        "hamstrings",
+        "lower_back"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "posterior_chain_stretch"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Sit tall, hinge from hips, reach toward feet. Soft knees OK. 60 sec.",
+      "notes": "Hold 60 sec. Don't round into spine \u2014 hinge from hips.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "yoga_butterfly",
+      "name": "Bound Angle (Butterfly)",
+      "category": "yoga_asana",
+      "movement_pattern": "stretch",
+      "primary_movers": [
+        "adductors",
+        "hip_external_rotators"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "hip_mobility"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "Sit, soles of feet together, knees fall open, gentle press knees down. 60 sec.",
+      "notes": "Adductor + hip external rotator opener. 60 sec hold.",
+      "video_url": "https://www.youtube.com/watch?v=KfElAgr72Vo",
+      "video_source": "Tom Merrick (Bodyweight Warrior) \u2014 Hip Mobility Routine V3 (covers butterfly)",
+      "video_duration_sec": null
+    },
+    {
+      "id": "yoga_thread_the_needle",
+      "name": "Thread the Needle",
+      "category": "yoga_asana",
+      "movement_pattern": "stretch",
+      "primary_movers": [
+        "thoracic_spine",
+        "rear_delts"
+      ],
+      "secondary_movers": [
+        "rhomboids"
+      ],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          1,
+          1
+        ],
+        "phase_1": [
+          1,
+          1
+        ],
+        "phase_2": [
+          1,
+          1
+        ]
+      },
+      "rest_seconds": 0,
+      "position_tags": [
+        "thoracic_mobility",
+        "scap_retraction"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "On all fours, slide one arm under torso, shoulder + ear to mat, breathe. 30 sec/side.",
+      "notes": "Excellent thoracic rotation + posterior shoulder stretch.",
+      "video_url": "https://www.youtube.com/watch?v=vOukJVt56os",
+      "video_source": "Thread the Needle (Parsva Balasana) tutorial",
+      "video_duration_sec": null
+    },
+    {
+      "id": "physio_tke_band",
+      "name": "Terminal Knee Extension (TKE)",
+      "category": "physio_specific",
+      "movement_pattern": "knee_extension_isolated",
+      "primary_movers": [
+        "vmo",
+        "quads"
+      ],
+      "secondary_movers": [
+        "knee_stabilizers"
+      ],
+      "equipment_required": [
+        "resistance_bands"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          12,
+          15
+        ],
+        "phase_1": [
+          12,
+          15
+        ],
+        "phase_2": [
+          12,
+          15
+        ]
+      },
+      "rest_seconds": 45,
+      "position_tags": [
+        "knee_resilience",
+        "vmo_emphasis"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": true,
+      "cue": "Band behind knee, push knee straight back to lock out, squeeze VMO at top.",
+      "notes": "ACL-deficient knee staple. VMO activation. Light resistance.",
+      "video_url": "https://www.youtube.com/watch?v=7xG3MeoLjC0",
+      "video_source": "Knee Pain Tutorial channel",
+      "video_duration_sec": null
+    },
+    {
+      "id": "core_mcgill_curlup",
+      "name": "McGill Curl-Up",
+      "category": "core",
+      "movement_pattern": "anti_extension",
+      "primary_movers": [
+        "rectus_abdominis"
+      ],
+      "secondary_movers": [],
+      "equipment_required": [
+        "yoga_mat"
+      ],
+      "fatigue_cost": "low",
+      "rep_ranges": {
+        "phase_0": [
+          3,
+          5
+        ],
+        "phase_1": [
+          3,
+          5
+        ],
+        "phase_2": [
+          3,
+          5
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "spine_sparing",
+        "back_health"
+      ],
+      "contraindication_tags": [],
+      "phase_eligibility": [
+        0,
+        1,
+        2
+      ],
+      "is_physio": false,
+      "cue": "One knee bent, other straight, hands under low back. Lift head + shoulders 1-2 inches.",
+      "notes": "McGill Big 3. Hold 8-10 sec, 3-5 reps. Spine-sparing core endurance.",
+      "video_url": "https://www.youtube.com/watch?v=FmZwkgg7pqU",
+      "video_source": "McGill Big 3 full tutorial",
+      "video_duration_sec": null
+    }
+  ]
+}
