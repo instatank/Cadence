@@ -206,6 +206,7 @@ const DEFAULT_STATE = () => ({
   daySkew: 0, // increments on "Not today" — shifts split sequence
   sessions: {}, // sessionId → session record (also synced)
   exerciseHistory: {}, // exerciseId → { lastDate, lastLoad, lastReps, symptomFlagCount, lastCardType }
+  videoOverrides: {}, // exerciseId → preferred YouTube URL (user override, syncs)
   updatedAt: 0
 });
 
@@ -222,6 +223,7 @@ function saveState({ remote = true } = {}) {
       daySkew: STATE.daySkew,
       setupDone: STATE.setupDone,
       exerciseHistory: STATE.exerciseHistory,
+      videoOverrides: STATE.videoOverrides || {},
       updatedAt: STATE.updatedAt
     }, { merge: true }).catch(e => console.warn("[Cadence] sync user failed", e));
   }
@@ -482,27 +484,65 @@ function pill(text, klass = "bg-slate-700 text-slate-200") {
 }
 
 function howToDisclosure(ex) {
-  const links = referenceLinks(ex);
   const wrap = el("div", { class: "mb-3" });
   let open = false;
-  const body = el("div", { class: "hidden mt-2 flex flex-wrap gap-2" });
-  links.forEach(link => {
-    const icon = link.kind === "video" ? "▶" : "◫";
-    const subtitle = link.curated ? "" : " · search";
-    body.appendChild(el("a", {
-      href: link.url, target: "_blank", rel: "noopener noreferrer",
-      class: "inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm text-ink"
-    }, [
-      el("span", { class: "text-accent" }, [icon]),
-      el("span", {}, [link.label]),
-      subtitle ? el("span", { class: "text-mute text-xs" }, [subtitle]) : null
-    ]));
-  });
+  const body = el("div", { class: "hidden mt-2" });
+
+  function rebuildBody() {
+    body.innerHTML = "";
+    const links = referenceLinks(ex);
+    const linksRow = el("div", { class: "flex flex-wrap gap-2" });
+    links.forEach(link => {
+      const icon = link.kind === "video" ? "▶" : "◫";
+      const subtitle = link.curated ? "" : " · search";
+      linksRow.appendChild(el("a", {
+        href: link.url, target: "_blank", rel: "noopener noreferrer",
+        class: `inline-flex items-center gap-2 px-3 py-2 rounded-lg ${link.mine ? "bg-accent/10 text-accent ring-1 ring-accent/30" : "bg-slate-800 text-ink"} text-sm`
+      }, [
+        el("span", { class: link.mine ? "" : "text-accent" }, [icon]),
+        el("span", {}, [link.label]),
+        subtitle ? el("span", { class: "text-mute text-xs" }, [subtitle]) : null
+      ]));
+    });
+    body.appendChild(linksRow);
+
+    // Edit row (paste your own URL)
+    const editRow = el("div", { class: "mt-2 flex items-center gap-2" });
+    const input = el("input", {
+      type: "url", placeholder: "Paste a better YouTube URL",
+      value: (STATE.videoOverrides || {})[ex.exerciseId] || "",
+      class: "flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent"
+    });
+    const save = el("button", {
+      class: "px-3 py-2 rounded-lg bg-accent/20 text-accent text-sm",
+      onClick: () => {
+        const v = input.value.trim();
+        if (v && !isValidYouTubeUrl(v)) { input.classList.add("border-danger"); return; }
+        setVideoOverride(ex.exerciseId, v || null);
+        rebuildBody();
+      }
+    }, ["Save"]);
+    editRow.appendChild(input);
+    editRow.appendChild(save);
+    if ((STATE.videoOverrides || {})[ex.exerciseId]) {
+      editRow.appendChild(el("button", {
+        class: "px-2 py-2 rounded-lg text-mute text-xs",
+        onClick: () => { setVideoOverride(ex.exerciseId, null); rebuildBody(); }
+      }, ["Clear"]));
+    }
+    body.appendChild(editRow);
+  }
+
+  const caret = el("span", { class: "inline-block w-3 text-center" }, ["▸"]);
   const toggle = el("button", {
     class: "text-xs text-mute hover:text-ink inline-flex items-center gap-1",
-    onClick: () => { open = !open; body.classList.toggle("hidden", !open); body.classList.toggle("flex", open); caret.textContent = open ? "▾" : "▸"; }
+    onClick: () => {
+      open = !open;
+      body.classList.toggle("hidden", !open);
+      caret.textContent = open ? "▾" : "▸";
+      if (open) rebuildBody();
+    }
   });
-  const caret = el("span", { class: "inline-block w-3 text-center" }, ["▸"]);
   toggle.appendChild(caret);
   toggle.appendChild(document.createTextNode(" How to perform"));
   wrap.appendChild(toggle);
@@ -632,10 +672,13 @@ const prettyContra = (c) => ({
   right_medial_ankle: "Right medial ankle"
 }[c] || c);
 
-// Reference links — curated video_url if seeded, else fall back to a YouTube search query.
+// Reference links — user override beats seed video_url beats search fallback.
 function referenceLinks(ex) {
   const out = [];
-  if (ex.videoUrl) {
+  const override = (STATE.videoOverrides || {})[ex.exerciseId];
+  if (override) {
+    out.push({ kind: "video", label: "Watch (your pick)", url: override, curated: true, mine: true });
+  } else if (ex.videoUrl) {
     const dur = ex.videoDurationSec ? ` · ${Math.round(ex.videoDurationSec / 60)}m` : "";
     const src = ex.videoSource ? ` · ${ex.videoSource}` : "";
     out.push({ kind: "video", label: `Watch demo${dur}${src}`, url: ex.videoUrl, curated: true });
@@ -646,6 +689,21 @@ function referenceLinks(ex) {
     out.push({ kind: "diagram", label: "Search diagram", url: `https://www.google.com/search?tbm=isch&q=${g}`, curated: false });
   }
   return out;
+}
+
+function isValidYouTubeUrl(s) {
+  if (!s) return false;
+  try {
+    const u = new URL(s.trim());
+    return /(^|\.)youtube\.com$/.test(u.hostname) || u.hostname === "youtu.be";
+  } catch { return false; }
+}
+
+function setVideoOverride(exerciseId, url) {
+  STATE.videoOverrides = STATE.videoOverrides || {};
+  if (url) STATE.videoOverrides[exerciseId] = url;
+  else delete STATE.videoOverrides[exerciseId];
+  saveState();
 }
 
 //-----------------------------------------------------------------------------
@@ -1133,6 +1191,29 @@ function SettingsScreen() {
   wrap.appendChild(section("Sync", [
     el("div", { class: "text-sm text-mute" }, [
       fbReady ? `Connected · uid ${fbUid?.slice(0,6)}…` : "Local-only (no Firebase config)"
+    ])
+  ]));
+
+  // Video picks export — promote your overrides into the seed
+  const overrides = STATE.videoOverrides || {};
+  const overrideCount = Object.keys(overrides).length;
+  wrap.appendChild(section("Your video picks", [
+    el("p", { class: "text-xs text-mute mb-3" }, [
+      `${overrideCount} ${overrideCount === 1 ? "override" : "overrides"} saved. Export to share with your developer; they'll promote your picks into the seed JSON so they ship as defaults.`
+    ]),
+    el("div", { class: "flex gap-2" }, [
+      el("button", {
+        class: "flex-1 py-2 rounded-lg bg-slate-800 text-sm",
+        onClick: async () => {
+          const json = JSON.stringify(overrides, null, 2);
+          try { await navigator.clipboard.writeText(json); alert("Copied " + overrideCount + " video picks to clipboard."); }
+          catch { prompt("Copy this JSON:", json); }
+        }
+      }, ["Copy as JSON"]),
+      overrideCount ? el("button", {
+        class: "px-3 py-2 rounded-lg bg-danger/20 text-danger text-sm",
+        onClick: () => { if (!confirm("Clear all your video picks?")) return; STATE.videoOverrides = {}; saveState(); render(); }
+      }, ["Clear all"]) : null
     ])
   ]));
 
