@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#0b0f17" />
+<meta name="theme-color" content="#F4F1EA" />
 <title>Cadence</title>
 <link rel="manifest" href="/manifest.json" />
 <link rel="icon" href="/icon.svg" type="image/svg+xml" />
@@ -14,27 +14,83 @@
     theme: {
       extend: {
         colors: {
-          bg: '#0b0f17', surface: '#111827', card: '#0f172a',
-          ink: '#e5e7eb', mute: '#94a3b8', accent: '#22d3ee', warn: '#f59e0b', danger: '#ef4444', ok: '#10b981'
+          bg:        '#F4F1EA',
+          surface:   '#FBF9F4',
+          card:      '#FBF9F4',
+          surface2:  '#ECE8DE',
+          hairline:  '#DED8CB',
+          line:      '#C5BEAD',
+          ink:       '#0E1218',
+          mute:      '#6B6757',
+          dim:       '#ABA593',
+          accent:    '#2D4A1E',
+          accentInk: '#FBF9F4',
+          ok:        '#1F7A55',
+          warn:      '#A6651D',
+          danger:    '#B23830'
+        },
+        fontFamily: {
+          sans: ['-apple-system','BlinkMacSystemFont','"SF Pro Text"','Inter','system-ui','sans-serif'],
+          mono: ['ui-monospace','"SF Mono"','Menlo','"Roboto Mono"','monospace']
+        },
+        borderRadius: { sm: '8px', md: '16px' },
+        boxShadow: {
+          active: '0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 18px -10px rgba(20,18,12,0.18)'
         }
       }
     }
   };
 </script>
 <style>
-  html, body { background:#0b0f17; color:#e5e7eb; -webkit-tap-highlight-color: transparent; }
-  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif; padding-bottom: env(safe-area-inset-bottom); }
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { scrollbar-width: none; }
+  html, body {
+    background: #F4F1EA;
+    color: #0E1218;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .num {
+    font-family: ui-monospace, "SF Mono", Menlo, "Roboto Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  .t-display { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+  .t-body    { font-size: 17px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.3; }
+  .t-meta    { font-size: 13px; font-weight: 500; line-height: 1.3; }
+  .t-micro   { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; line-height: 1; text-transform: uppercase; }
+
+  @keyframes setpulse { 0%{transform:scale(.85)} 60%{transform:scale(1.06)} 100%{transform:scale(1)} }
+  .set-check-anim { animation: setpulse 180ms cubic-bezier(.2,.8,.2,1); }
+
+  @keyframes cardadvance { 0%{transform:translateY(8px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+  .card-advance { animation: cardadvance 220ms cubic-bezier(.2,.8,.2,1); }
+
+  @keyframes fadein { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform:none; } }
+  .fadein { animation: fadein 140ms ease both; }
+
   .check { transition: transform 80ms ease; }
   .check:active { transform: scale(0.92); }
   .row-press { user-select: none; -webkit-user-select: none; }
-  @keyframes fadein { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform:none; } }
-  .fadein { animation: fadein 140ms ease both; }
-  .pill { font-size: 0.7rem; padding: 2px 8px; border-radius: 999px; }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+
+  .pill {
+    display: inline-flex; align-items: center; height: 20px;
+    padding: 0 8px; border-radius: 8px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #6B6757;
+    border: 1px solid #C5BEAD; background: transparent;
+  }
+  .pill-warn   { color: #A6651D; border-color: #A6651D; }
+  .pill-accent { color: #2D4A1E; border-color: #2D4A1E; }
 </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen bg-bg text-ink">
 
 <!-- ========================================================================
      FIREBASE CONFIG — fill these in for sync. With placeholders, the app
@@ -476,11 +532,13 @@ function header(title, rightBtn) {
 }
 
 function iconBtn(label, onClick) {
-  return el("button", { class: "text-mute hover:text-ink p-2 rounded-lg", onClick }, [label]);
+  return el("button", { class: "text-mute hover:text-ink p-2 rounded-sm", onClick }, [label]);
 }
 
-function pill(text, klass = "bg-slate-700 text-slate-200") {
-  return el("span", { class: `pill ${klass}` }, [text]);
+// tone: null (default mute) | "warn" | "accent"
+function pill(text, tone) {
+  const cls = tone === "warn" ? "pill pill-warn" : tone === "accent" ? "pill pill-accent" : "pill";
+  return el("span", { class: cls }, [text]);
 }
 
 function howToDisclosure(ex) {
@@ -497,7 +555,7 @@ function howToDisclosure(ex) {
       const subtitle = link.curated ? "" : " · search";
       linksRow.appendChild(el("a", {
         href: link.url, target: "_blank", rel: "noopener noreferrer",
-        class: `inline-flex items-center gap-2 px-3 py-2 rounded-lg ${link.mine ? "bg-accent/10 text-accent ring-1 ring-accent/30" : "bg-slate-800 text-ink"} text-sm`
+        class: `inline-flex items-center gap-2 px-3 py-2 rounded-sm ${link.mine ? "bg-accent/10 text-accent ring-1 ring-accent/30" : "bg-surface2 text-ink"} text-sm`
       }, [
         el("span", { class: link.mine ? "" : "text-accent" }, [icon]),
         el("span", {}, [link.label]),
@@ -511,10 +569,10 @@ function howToDisclosure(ex) {
     const input = el("input", {
       type: "url", placeholder: "Paste a better YouTube URL",
       value: (STATE.videoOverrides || {})[ex.exerciseId] || "",
-      class: "flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-accent"
+      class: "flex-1 bg-surface2 border border-hairline rounded-sm px-3 py-2 text-sm outline-none focus:border-accent"
     });
     const save = el("button", {
-      class: "px-3 py-2 rounded-lg bg-accent/20 text-accent text-sm",
+      class: "px-3 py-2 rounded-sm text-accent border border-accent text-sm",
       onClick: () => {
         const v = input.value.trim();
         if (v && !isValidYouTubeUrl(v)) { input.classList.add("border-danger"); return; }
@@ -526,7 +584,7 @@ function howToDisclosure(ex) {
     editRow.appendChild(save);
     if ((STATE.videoOverrides || {})[ex.exerciseId]) {
       editRow.appendChild(el("button", {
-        class: "px-2 py-2 rounded-lg text-mute text-xs",
+        class: "px-2 py-2 rounded-sm text-mute text-xs",
         onClick: () => { setVideoOverride(ex.exerciseId, null); rebuildBody(); }
       }, ["Clear"]));
     }
@@ -606,8 +664,8 @@ function SetupScreen() {
 
     wrap.appendChild(el("div", { class: "fixed left-0 right-0 bottom-0 bg-bg/90 backdrop-blur p-4" }, [
       el("div", { class: "max-w-md mx-auto flex gap-2" }, [
-        step > 0 ? el("button", { class: "flex-1 py-3 rounded-xl bg-slate-800 text-mute", onClick: () => { step--; paint(); } }, ["Back"]) : null,
-        el("button", { class: "flex-1 py-3 rounded-xl bg-accent text-bg font-medium", onClick: () => {
+        step > 0 ? el("button", { class: "flex-1 py-3 rounded-md bg-surface2 text-mute", onClick: () => { step--; paint(); } }, ["Back"]) : null,
+        el("button", { class: "flex-1 h-12 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight active:scale-[.985] active:opacity-90 transition", onClick: () => {
           if (step < 2) { step++; paint(); return; }
           STATE.profile = {
             goal: draft.goal, phase: draft.phase, frequency: draft.frequency, sessionLength: draft.sessionLength,
@@ -631,7 +689,7 @@ function radioGroup(options, value, onChange, labelFn = x => prettyEquipment(x))
   options.forEach(opt => {
     const active = String(opt) === String(value);
     row.appendChild(el("button", {
-      class: `px-3 py-2 rounded-lg border ${active ? "border-accent text-accent bg-accent/10" : "border-slate-700 text-mute"}`,
+      class: `px-3 py-2 rounded-sm border ${active ? "border-accent text-accent bg-accent/10" : "border-hairline text-mute"}`,
       onClick: () => { onChange(opt); row.parentElement.parentElement && row.parentElement.replaceChild(radioGroup(options, opt, onChange, labelFn), row); }
     }, [labelFn(opt)]));
   });
@@ -643,7 +701,7 @@ function chipSelect(options, set, labelFn) {
   options.forEach(opt => {
     const active = set.has(opt);
     row.appendChild(el("button", {
-      class: `px-3 py-2 rounded-lg border text-sm ${active ? "border-accent text-accent bg-accent/10" : "border-slate-700 text-mute"}`,
+      class: `px-3 py-2 rounded-sm border text-sm ${active ? "border-accent text-accent bg-accent/10" : "border-hairline text-mute"}`,
       onClick: (e) => { active ? set.delete(opt) : set.add(opt); e.target.replaceWith(...chipSelect(options, set, labelFn).children); }
     }, [labelFn(opt)]));
   });
@@ -651,11 +709,11 @@ function chipSelect(options, set, labelFn) {
 }
 
 function numberStepper(value, min, max, onChange, step = 1) {
-  const wrap = el("div", { class: "flex items-center gap-2 bg-slate-800 rounded-lg p-1" });
+  const wrap = el("div", { class: "flex items-center gap-2 bg-surface2 rounded-sm p-1" });
   const display = el("div", { class: "flex-1 text-center text-lg" }, [String(value)]);
-  wrap.appendChild(el("button", { class: "w-10 h-10 rounded-lg bg-slate-700", onClick: () => { value = Math.max(min, value - step); onChange(value); display.textContent = String(value); } }, ["−"]));
+  wrap.appendChild(el("button", { class: "w-10 h-10 rounded-sm bg-surface2", onClick: () => { value = Math.max(min, value - step); onChange(value); display.textContent = String(value); } }, ["−"]));
   wrap.appendChild(display);
-  wrap.appendChild(el("button", { class: "w-10 h-10 rounded-lg bg-slate-700", onClick: () => { value = Math.min(max, value + step); onChange(value); display.textContent = String(value); } }, ["+"]));
+  wrap.appendChild(el("button", { class: "w-10 h-10 rounded-sm bg-surface2", onClick: () => { value = Math.min(max, value + step); onChange(value); display.textContent = String(value); } }, ["+"]));
   return wrap;
 }
 
@@ -731,7 +789,7 @@ function TodayScreen() {
   const totalSets = (session.planned || []).reduce((n, p) => n + p.sets.length, 0);
   const dayName = new Date().toLocaleDateString(undefined, { weekday: "short" });
 
-  const card = el("section", { class: "bg-card rounded-2xl p-5 border border-slate-800" });
+  const card = el("section", { class: "bg-card rounded-md p-5 border border-hairline" });
   if (isOff) {
     card.appendChild(el("div", { class: "space-y-3" }, [
       el("div", { class: "text-mute text-sm" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
@@ -741,25 +799,27 @@ function TodayScreen() {
   } else {
     card.appendChild(el("div", { class: "space-y-2" }, [
       el("div", { class: "flex items-center gap-2" }, [
-        el("span", { class: "text-mute text-sm" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
-        session.deload ? pill("Deload week", "bg-warn/20 text-warn") : null
+        el("span", { class: "t-meta text-mute" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
+        session.deload ? pill("Deload week", "warn") : null
       ]),
-      el("h2", { class: "text-3xl font-semibold tracking-tight" }, [meta.title]),
-      el("div", { class: "text-mute" }, [
-        `~${meta.duration} min · ${session.planned.length} exercises · ${totalSets} sets`
+      el("h2", { class: "t-display text-ink" }, [meta.title]),
+      el("div", { class: "t-meta text-mute" }, [
+        el("span", { class: "num" }, [`~${meta.duration}`]), " min · ",
+        el("span", { class: "num" }, [String(session.planned.length)]), " exercises · ",
+        el("span", { class: "num" }, [String(totalSets)]), " sets"
       ])
     ]));
 
     if (session.recovery?.length) {
-      card.appendChild(el("div", { class: "mt-4 pt-4 border-t border-slate-800 text-sm text-mute" }, [
+      card.appendChild(el("div", { class: "mt-4 pt-4 border-t border-hairline text-sm text-mute" }, [
         "Includes mandatory recovery block: " + session.recovery.map(r => r.name.split(":")[0]).join(" + ")
       ]));
     }
 
     card.appendChild(el("button", {
-      class: "w-full mt-5 py-4 rounded-xl bg-accent text-bg font-semibold text-lg",
+      class: "w-full mt-5 h-14 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight active:scale-[.985] active:opacity-90 transition",
       onClick: () => { session.startedAt = Date.now(); STATE.sessions[session.id] = session; saveState(); navigate("session"); }
-    }, [session.startedAt && !session.completedAt ? "Resume" : "Start"]));
+    }, [session.startedAt && !session.completedAt ? "Resume" : "Start workout"]));
 
     card.appendChild(el("button", {
       class: "w-full mt-2 py-2 text-mute text-sm",
@@ -778,7 +838,7 @@ function TodayScreen() {
   const tomCard = generateSession(tomorrow);
   wrap.appendChild(el("section", { class: "mt-6" }, [
     el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Tomorrow"]),
-    el("div", { class: "bg-surface/40 rounded-xl p-3 border border-slate-800 flex items-center justify-between" }, [
+    el("div", { class: "bg-surface rounded-md p-3 border border-hairline flex items-center justify-between" }, [
       el("div", {}, [
         el("div", { class: "font-medium" }, [tomCard.meta?.title || "Off Day"]),
         el("div", { class: "text-xs text-mute" }, [tomCard.planned.length ? `${tomCard.planned.length} exercises` : "—"])
@@ -817,7 +877,7 @@ function weekStrip() {
   });
 
   const bar = el("nav", {
-    class: "fixed bottom-0 left-0 right-0 bg-bg/95 backdrop-blur border-t border-slate-800",
+    class: "fixed bottom-0 left-0 right-0 bg-bg/95 backdrop-blur border-t border-hairline",
     style: { paddingBottom: "env(safe-area-inset-bottom)" }
   });
   const inner = el("div", { class: "max-w-md mx-auto px-3 py-2" });
@@ -834,9 +894,9 @@ function weekStrip() {
     const isOff = meta?.kind === "off";
     const completed = !!session?.completedAt;
 
-    const dotKlass = completed ? "bg-ok" : isOff ? "bg-slate-600" : "bg-accent";
+    const dotKlass = completed ? "bg-ok" : isOff ? "bg-dim" : "bg-accent";
     const btn = el("button", {
-      class: `flex flex-col items-center justify-center py-2 rounded-lg ${isToday ? "bg-slate-800 ring-1 ring-accent/40" : "hover:bg-slate-800/60"}`,
+      class: `flex flex-col items-center justify-center py-2 rounded-sm ${isToday ? "bg-surface2 ring-1 ring-accent/40" : "hover:bg-surface2"}`,
       onClick: () => openDayPreview(d)
     }, [
       el("div", { class: `text-xs ${isToday ? "text-accent" : "text-mute"} font-medium` }, [d.toLocaleDateString(undefined, { weekday: "short" })[0]]),
@@ -863,7 +923,7 @@ function openDayPreview(date) {
 
   // Sheet
   const sheet = el("div", {
-    class: "w-full max-w-md bg-card border-t border-slate-800 rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto no-scrollbar",
+    class: "w-full max-w-md bg-card border-t border-hairline rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto no-scrollbar",
     style: { paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }
   });
 
@@ -874,7 +934,7 @@ function openDayPreview(date) {
       meta?.kind !== "off" ? el("div", { class: "text-mute text-sm mt-1" }, [
         `~${meta.duration} min · ${preview.planned.length} exercises · ${preview.planned.reduce((n,p)=>n+p.sets.length,0)} sets`
       ]) : null,
-      preview.deload ? pill("Deload week", "bg-warn/20 text-warn") : null
+      preview.deload ? pill("Deload week", "warn") : null
     ]),
     el("button", { class: "text-mute text-xl px-2", onClick: () => backdrop.remove() }, ["×"])
   ]));
@@ -884,7 +944,7 @@ function openDayPreview(date) {
   } else {
     const list = el("ol", { class: "space-y-2 mt-2" });
     preview.planned.forEach((p, i) => {
-      list.appendChild(el("li", { class: "py-2 px-3 bg-surface/40 rounded-lg border border-slate-800" }, [
+      list.appendChild(el("li", { class: "py-2 px-3 bg-surface rounded-sm border border-hairline" }, [
         el("div", { class: "flex justify-between items-baseline gap-2" }, [
           el("div", { class: "font-medium" }, [`${i+1}. ${p.name}`]),
           el("div", { class: "text-xs text-mute whitespace-nowrap" }, [`${p.sets.length} × ${p.repRange.join("–")}`])
@@ -895,7 +955,7 @@ function openDayPreview(date) {
     sheet.appendChild(list);
 
     if (preview.recovery?.length) {
-      sheet.appendChild(el("div", { class: "mt-4 pt-3 border-t border-slate-800" }, [
+      sheet.appendChild(el("div", { class: "mt-4 pt-3 border-t border-hairline" }, [
         el("div", { class: "text-mute text-xs uppercase tracking-wide mb-2" }, ["Recovery block"]),
         ...preview.recovery.map(r => el("div", { class: "text-sm py-1" }, [`• ${r.name} · ${r.durationMin} min`]))
       ]));
@@ -903,7 +963,7 @@ function openDayPreview(date) {
 
     const isToday = date.toISOString().slice(0,10) === todayISO();
     sheet.appendChild(el("button", {
-      class: `w-full mt-5 py-3 rounded-xl ${isToday ? "bg-accent text-bg font-medium" : "bg-slate-800 text-mute"}`,
+      class: `w-full mt-5 py-3 rounded-md ${isToday ? "bg-accent text-accentInk font-medium" : "bg-surface2 text-mute"}`,
       onClick: () => { backdrop.remove(); if (isToday) navigate("today"); }
     }, [isToday ? "Go to today" : "Close"]));
   }
@@ -934,7 +994,7 @@ function SessionScreen() {
     const total = session.planned.length + (session.recovery?.length || 0);
     const doneCount = session.planned.filter(p => p.sets.every(s => s.completed)).length
                     + (session.recovery || []).filter(r => r.completed).length;
-    wrap.appendChild(el("div", { class: "h-1 bg-slate-800 rounded-full mb-5 overflow-hidden" }, [
+    wrap.appendChild(el("div", { class: "h-1 bg-surface2 rounded-full mb-5 overflow-hidden" }, [
       el("div", { class: "h-full bg-accent", style: { width: `${(doneCount/total)*100}%` } })
     ]));
 
@@ -954,7 +1014,7 @@ function SessionScreen() {
       wrap.appendChild(el("div", { class: "mt-6" }, [
         el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Up next"]),
         ...session.planned.slice(activeIdx + 1).map((p, i) => el("div", {
-          class: "py-2 px-3 bg-surface/40 rounded-lg mb-1 text-sm flex justify-between"
+          class: "py-2 px-3 bg-surface rounded-sm mb-1 text-sm flex justify-between"
         }, [
           el("span", {}, [`${activeIdx + 2 + i}. ${p.name}`]),
           el("span", { class: "text-mute" }, [`${p.sets.length} × ${p.repRange.join("–")}`])
@@ -964,13 +1024,13 @@ function SessionScreen() {
   }
 
   function exerciseCard(ex, idx) {
-    const card = el("section", { class: "bg-card border border-slate-800 rounded-2xl p-5" });
+    const card = el("section", { class: "bg-surface border border-hairline rounded-md p-6 shadow-active card-advance" });
     card.appendChild(el("div", { class: "flex items-start justify-between mb-3" }, [
       el("div", {}, [
-        el("div", { class: "text-mute text-xs uppercase tracking-wide" }, [`Exercise ${idx+1} of ${session.planned.length}`]),
-        el("h2", { class: "text-xl font-semibold" }, [ex.name])
+        el("div", { class: "t-micro text-mute" }, [`Exercise ${idx+1} of ${session.planned.length}`]),
+        el("h2", { class: "t-display text-ink" }, [ex.name])
       ]),
-      ex.isPhysio ? pill("Physio", "bg-accent/10 text-accent") : null
+      ex.isPhysio ? pill("Physio", "accent") : null
     ]));
     if (ex.cue) card.appendChild(el("p", { class: "text-sm text-ink mb-2" }, [ex.cue]));
     if (ex.notes) card.appendChild(el("p", { class: "text-xs text-mute mb-3" }, [ex.notes]));
@@ -980,21 +1040,37 @@ function SessionScreen() {
     if (!ex.kind || ex.kind !== "recovery") card.appendChild(howToDisclosure(ex));
 
     ex.sets.forEach((set, sIdx) => {
-      const row = el("div", { class: "flex items-center gap-3 py-2 row-press" });
+      const row = el("div", { class: "grid grid-cols-[32px_28px_1fr_auto] items-center gap-3 row-press", style: { height: "52px" } });
       const cb = el("button", {
-        class: `check w-8 h-8 rounded-full border-2 ${set.completed ? "bg-ok border-ok" : "border-slate-600"}`,
+        class: `check w-[26px] h-[26px] rounded-full border-[1.5px] ${set.completed ? "bg-ok border-ok set-check-anim" : "border-dim"}`,
         onClick: () => { set.completed = !set.completed; saveState({remote:false}); paint(); }
-      }, [set.completed ? el("span", { class: "text-bg font-bold" }, ["✓"]) : ""]);
-      const main = el("button", {
-        class: "flex-1 text-left",
-        onClick: () => toggleExpand(sIdx)
-      }, [
-        el("div", { class: "text-sm font-medium" }, [`Set ${sIdx + 1}`]),
-        el("div", { class: "text-xs text-mute" }, [
-          (set.load != null ? `${set.load} kg` : "—") + " · " + (set.reps != null ? `${set.reps} reps` : `${ex.repRange.join("–")} reps`)
-        ])
-      ]);
-      row.appendChild(cb); row.appendChild(main);
+      }, [set.completed ? el("span", { class: "text-accentInk text-xs", style: { lineHeight: "0" } }, ["✓"]) : ""]);
+
+      const setNum = el("span", { class: "t-meta num text-mute" }, [String(sIdx + 1)]);
+
+      const repsCol = el("button", { class: "t-body num text-ink text-left", onClick: () => toggleExpand(sIdx) });
+      if (set.reps != null) {
+        repsCol.appendChild(document.createTextNode(String(set.reps)));
+        const u = el("span", { class: "t-meta text-mute ml-1" }, ["reps"]);
+        repsCol.appendChild(u);
+      } else {
+        repsCol.appendChild(document.createTextNode(`${ex.repRange[0]}–${ex.repRange[1]}`));
+        const u = el("span", { class: "t-meta text-mute ml-1" }, ["reps"]);
+        repsCol.appendChild(u);
+      }
+
+      const loadCol = el("button", { class: "t-body num text-mute text-right", onClick: () => toggleExpand(sIdx) });
+      if (set.load != null) {
+        loadCol.appendChild(document.createTextNode(String(set.load)));
+        const u = el("span", { class: "t-meta text-mute ml-1" }, ["kg"]);
+        loadCol.appendChild(u);
+      } else {
+        loadCol.appendChild(document.createTextNode("—"));
+        const u = el("span", { class: "t-meta text-mute ml-1" }, ["kg"]);
+        loadCol.appendChild(u);
+      }
+
+      row.appendChild(cb); row.appendChild(setNum); row.appendChild(repsCol); row.appendChild(loadCol);
       card.appendChild(row);
 
       function toggleExpand(i) {
@@ -1037,15 +1113,15 @@ function SessionScreen() {
   }
 
   function recoveryCard(session) {
-    const card = el("section", { class: "bg-card border border-slate-800 rounded-2xl p-5" });
+    const card = el("section", { class: "bg-card border border-hairline rounded-md p-5" });
     card.appendChild(el("h2", { class: "text-xl font-semibold mb-1" }, ["Recovery block"]));
     card.appendChild(el("p", { class: "text-xs text-mute mb-3" }, ["Unskippable on resistance days in Phase 0/1."]));
     session.recovery.forEach((b, i) => {
       const row = el("div", { class: "flex items-center gap-3 py-2" });
       row.appendChild(el("button", {
-        class: `check w-8 h-8 rounded-full border-2 ${b.completed ? "bg-ok border-ok" : "border-slate-600"}`,
+        class: `check w-8 h-8 rounded-full border-2 ${b.completed ? "bg-ok border-ok" : "border-dim"}`,
         onClick: () => { b.completed = !b.completed; saveState({remote:false}); paint(); }
-      }, [b.completed ? el("span", { class: "text-bg font-bold" }, ["✓"]) : ""]));
+      }, [b.completed ? el("span", { class: "text-accentInk font-bold" }, ["✓"]) : ""]));
       row.appendChild(el("div", {}, [
         el("div", { class: "text-sm font-medium" }, [b.name]),
         el("div", { class: "text-xs text-mute" }, [`${b.durationMin} min`])
@@ -1056,14 +1132,22 @@ function SessionScreen() {
   }
 
   function numericInput(label, value, onChange) {
-    return el("label", { class: "flex-1 bg-slate-800 rounded-lg px-3 py-2 flex items-center gap-2" }, [
-      el("span", { class: "text-xs text-mute" }, [label]),
-      Object.assign(el("input", {
-        type: "number", inputmode: "decimal",
-        class: "bg-transparent w-full outline-none text-sm",
-        value: value ?? ""
-      }), { oninput: e => onChange(e.target.value === "" ? null : parseFloat(e.target.value)) })
-    ]);
+    const wrap = el("label", {
+      class: "grid grid-cols-[40px_1fr_40px] items-center h-12 bg-surface2 rounded-sm flex-1"
+    });
+    const dec = el("button", { type: "button", class: "text-mute text-2xl h-full", onClick: (e) => { e.preventDefault(); const n = (parseFloat(input.value) || 0) - (label === "kg" ? 0.5 : 1); input.value = String(n); onChange(n); } }, ["−"]);
+    const center = el("div", { class: "flex items-baseline justify-center gap-1" });
+    const input = el("input", {
+      type: "number", inputmode: "decimal",
+      class: "num text-ink text-[17px] font-medium bg-transparent w-12 text-center outline-none",
+      value: value ?? ""
+    });
+    input.addEventListener("input", e => onChange(e.target.value === "" ? null : parseFloat(e.target.value)));
+    center.appendChild(input);
+    center.appendChild(el("span", { class: "t-meta text-mute" }, [label]));
+    const inc = el("button", { type: "button", class: "text-mute text-2xl h-full", onClick: (e) => { e.preventDefault(); const n = (parseFloat(input.value) || 0) + (label === "kg" ? 0.5 : 1); input.value = String(n); onChange(n); } }, ["+"]);
+    wrap.appendChild(dec); wrap.appendChild(center); wrap.appendChild(inc);
+    return wrap;
   }
 
   paint();
@@ -1103,7 +1187,7 @@ function DoneScreen() {
   const session = STATE.sessions[currentRoute().id] || STATE.sessions[sessionIdFor(new Date())];
   wrap.appendChild(header("Done"));
 
-  wrap.appendChild(el("section", { class: "bg-card border border-slate-800 rounded-2xl p-6 text-center" }, [
+  wrap.appendChild(el("section", { class: "bg-card border border-hairline rounded-md p-6 text-center" }, [
     el("div", { class: "text-5xl mb-3" }, ["✓"]),
     el("h2", { class: "text-2xl font-semibold" }, [session?.meta?.title || "Session"]),
     el("div", { class: "text-mute text-sm mt-1" }, [
@@ -1115,12 +1199,12 @@ function DoneScreen() {
     wrap.appendChild(el("section", { class: "mt-6" }, [
       el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Any pain today?"]),
       el("div", { class: "flex gap-2" }, [
-        el("button", { class: "flex-1 py-3 rounded-xl bg-slate-800", onClick: () => { session.sessionSymptomFlag = false; saveState(); syncSession(session); render(); } }, ["No"]),
-        el("button", { class: "flex-1 py-3 rounded-xl bg-warn/20 text-warn", onClick: () => { session.sessionSymptomFlag = true; saveState(); syncSession(session); render(); } }, ["Yes"])
+        el("button", { class: "flex-1 py-3 rounded-md bg-surface2", onClick: () => { session.sessionSymptomFlag = false; saveState(); syncSession(session); render(); } }, ["No"]),
+        el("button", { class: "flex-1 py-3 rounded-md text-warn", onClick: () => { session.sessionSymptomFlag = true; saveState(); syncSession(session); render(); } }, ["Yes"])
       ])
     ]));
   } else {
-    wrap.appendChild(el("button", { class: "w-full mt-6 py-3 rounded-xl bg-accent text-bg font-medium", onClick: () => navigate("today") }, ["Finish"]));
+    wrap.appendChild(el("button", { class: "w-full mt-6 h-12 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight active:scale-[.985] active:opacity-90 transition", onClick: () => navigate("today") }, ["Finish"]));
   }
   return wrap;
 }
@@ -1148,12 +1232,12 @@ function SettingsScreen() {
   wrap.appendChild(section("Mesocycle", [
     el("div", { class: "text-sm text-mute" }, [`Week ${STATE.mesocycle.currentWeek} of 5${isDeloadWeek() ? " · Deload" : ""}`]),
     el("div", { class: "flex gap-2 mt-3" }, [
-      el("button", { class: "flex-1 py-2 rounded-lg bg-slate-800 text-sm", onClick: () => {
+      el("button", { class: "flex-1 py-2 rounded-sm bg-surface2 text-sm", onClick: () => {
         STATE.mesocycle.startDate = todayISO(); STATE.mesocycle.currentWeek = 1;
         delete STATE.sessions[sessionIdFor(new Date())];
         saveState(); render();
       }}, ["Reset to Week 1"]),
-      el("button", { class: "flex-1 py-2 rounded-lg bg-slate-800 text-sm", onClick: () => {
+      el("button", { class: "flex-1 py-2 rounded-sm bg-surface2 text-sm", onClick: () => {
         const target = isDeloadWeek() ? 1 : 5;
         const offsetDays = (target - 1) * 7;
         STATE.mesocycle.startDate = new Date(Date.now() - offsetDays * 86400000).toISOString().slice(0,10);
@@ -1203,7 +1287,7 @@ function SettingsScreen() {
     ]),
     el("div", { class: "flex gap-2" }, [
       el("button", {
-        class: "flex-1 py-2 rounded-lg bg-slate-800 text-sm",
+        class: "flex-1 py-2 rounded-sm bg-surface2 text-sm",
         onClick: async () => {
           const json = JSON.stringify(overrides, null, 2);
           try { await navigator.clipboard.writeText(json); alert("Copied " + overrideCount + " video picks to clipboard."); }
@@ -1211,7 +1295,7 @@ function SettingsScreen() {
         }
       }, ["Copy as JSON"]),
       overrideCount ? el("button", {
-        class: "px-3 py-2 rounded-lg bg-danger/20 text-danger text-sm",
+        class: "px-3 py-2 rounded-sm bg-danger/20 text-danger text-sm",
         onClick: () => { if (!confirm("Clear all your video picks?")) return; STATE.videoOverrides = {}; saveState(); render(); }
       }, ["Clear all"]) : null
     ])
@@ -1219,7 +1303,7 @@ function SettingsScreen() {
 
   // Reset
   wrap.appendChild(section("Reset", [
-    el("button", { class: "w-full py-2 rounded-lg bg-danger/20 text-danger text-sm", onClick: () => {
+    el("button", { class: "w-full py-2 rounded-sm bg-danger/20 text-danger text-sm", onClick: () => {
       if (!confirm("Reset all local data?")) return;
       localStorage.removeItem(LS_KEY); STATE = DEFAULT_STATE(); render();
     }}, ["Reset local data"])
@@ -1231,7 +1315,7 @@ function SettingsScreen() {
 function section(title, children) {
   return el("section", { class: "mb-6" }, [
     el("h3", { class: "text-mute text-xs uppercase tracking-wide mb-2" }, [title]),
-    el("div", { class: "bg-card border border-slate-800 rounded-xl p-4" }, children)
+    el("div", { class: "bg-card border border-hairline rounded-md p-4" }, children)
   ]);
 }
 
