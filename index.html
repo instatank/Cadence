@@ -388,7 +388,9 @@ function generateSession(date = new Date()) {
         exerciseId: ex.id, name: ex.name, category: ex.category,
         sets: Array.from({ length: sets }, () => ({ reps: null, load: rx.load, completed: false })),
         repRange: rx.reps, prescribedLoad: rx.load, prescribedNote: rx.note,
-        rest_seconds: ex.rest_seconds, isPhysio: ex.is_physio || false, notes: ex.notes || ""
+        rest_seconds: ex.rest_seconds, isPhysio: ex.is_physio || false, notes: ex.notes || "",
+        referenceVideoUrl: ex.reference_video_url || null,
+        referenceDiagramUrl: ex.reference_diagram_url || null
       });
     }
   }
@@ -475,6 +477,35 @@ function iconBtn(label, onClick) {
 
 function pill(text, klass = "bg-slate-700 text-slate-200") {
   return el("span", { class: `pill ${klass}` }, [text]);
+}
+
+function howToDisclosure(ex) {
+  const links = referenceLinks(ex);
+  const wrap = el("div", { class: "mb-3" });
+  let open = false;
+  const body = el("div", { class: "hidden mt-2 flex flex-wrap gap-2" });
+  links.forEach(link => {
+    const icon = link.kind === "video" ? "▶" : "◫";
+    const subtitle = link.curated ? "" : " · search";
+    body.appendChild(el("a", {
+      href: link.url, target: "_blank", rel: "noopener noreferrer",
+      class: "inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-sm text-ink"
+    }, [
+      el("span", { class: "text-accent" }, [icon]),
+      el("span", {}, [link.label]),
+      subtitle ? el("span", { class: "text-mute text-xs" }, [subtitle]) : null
+    ]));
+  });
+  const toggle = el("button", {
+    class: "text-xs text-mute hover:text-ink inline-flex items-center gap-1",
+    onClick: () => { open = !open; body.classList.toggle("hidden", !open); body.classList.toggle("flex", open); caret.textContent = open ? "▾" : "▸"; }
+  });
+  const caret = el("span", { class: "inline-block w-3 text-center" }, ["▸"]);
+  toggle.appendChild(caret);
+  toggle.appendChild(document.createTextNode(" How to perform"));
+  wrap.appendChild(toggle);
+  wrap.appendChild(body);
+  return wrap;
 }
 
 //-----------------------------------------------------------------------------
@@ -598,6 +629,24 @@ const prettyContra = (c) => ({
   right_anterior_shoulder: "Right anterior shoulder",
   right_medial_ankle: "Right medial ankle"
 }[c] || c);
+
+// Reference links — curated if seeded, else fall back to a YouTube search query.
+function referenceLinks(ex) {
+  const out = [];
+  if (ex.referenceVideoUrl) {
+    out.push({ kind: "video", label: "Watch demo", url: ex.referenceVideoUrl, curated: true });
+  }
+  if (ex.referenceDiagramUrl) {
+    out.push({ kind: "diagram", label: "View diagram", url: ex.referenceDiagramUrl, curated: true });
+  }
+  if (out.length === 0) {
+    const q = encodeURIComponent(`${ex.name} how to do form`);
+    out.push({ kind: "video", label: "Search YouTube", url: `https://www.youtube.com/results?search_query=${q}`, curated: false });
+    const g = encodeURIComponent(`${ex.name} exercise diagram`);
+    out.push({ kind: "diagram", label: "Search diagram", url: `https://www.google.com/search?tbm=isch&q=${g}`, curated: false });
+  }
+  return out;
+}
 
 //-----------------------------------------------------------------------------
 // Today screen — PRD §7 Flow A
@@ -745,6 +794,9 @@ function SessionScreen() {
     ]));
     if (ex.notes) card.appendChild(el("p", { class: "text-xs text-mute mb-3" }, [ex.notes]));
     if (ex.prescribedNote) card.appendChild(el("p", { class: "text-xs text-accent mb-3" }, [ex.prescribedNote]));
+
+    // How-to disclosure (reference links)
+    if (!ex.kind || ex.kind !== "recovery") card.appendChild(howToDisclosure(ex));
 
     ex.sets.forEach((set, sIdx) => {
       const row = el("div", { class: "flex items-center gap-3 py-2 row-press" });
