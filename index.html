@@ -250,7 +250,7 @@ async function loadExerciseSeed() {
 async function seedFirestoreIfNeeded(seed) {
   if (!fbReady) return;
   const meta = await getDoc(doc(fbDb, "system", "seed"));
-  if (meta.exists() && meta.data().version === "2.1") return;
+  if (meta.exists() && meta.data().version === "2.2") return;
   // Batch write all exercises
   const chunks = [];
   for (let i = 0; i < seed.length; i += 400) chunks.push(seed.slice(i, i + 400));
@@ -259,7 +259,7 @@ async function seedFirestoreIfNeeded(seed) {
     chunk.forEach(ex => batch.set(doc(fbDb, "exercises", ex.id), ex));
     await batch.commit();
   }
-  await setDoc(doc(fbDb, "system", "seed"), { version: "2.1", seededAt: serverTimestamp(), count: seed.length });
+  await setDoc(doc(fbDb, "system", "seed"), { version: "2.2", seededAt: serverTimestamp(), count: seed.length });
   console.info(`[Cadence] Seeded ${seed.length} exercises to Firestore.`);
 }
 
@@ -277,7 +277,8 @@ const DEFAULT_STATE = () => ({
     frequency: 5,
     sessionLength: 45,
     equipment: [...DEFAULT_EQUIPMENT],
-    contraindications: [...DEFAULT_CONTRAINDICATIONS]
+    contraindications: [...DEFAULT_CONTRAINDICATIONS],
+    disabledTypes: ["cardio"]
   },
   mesocycle: { startDate: todayISO(), currentWeek: 1 }, // week 1..5; 5 = deload
   daySkew: 0, // increments on "Rest today" — shifts planned split forward
@@ -370,12 +371,15 @@ function filterPool(cardType, opts = {}) {
   const phase = STATE.profile.phase;
   const equip = new Set(STATE.profile.equipment);
   const contras = new Set(STATE.profile.contraindications);
+  const disabledTypes = new Set(STATE.profile.disabledTypes || []);
   const recentlyUsed = recentExerciseIds(cardType, 2);
 
   return EXERCISES.filter(ex => {
     if (!ex.phase_eligibility?.includes(phase)) return false;
     if (!ex.equipment_required?.every(e => equip.has(e))) return false;
     if (ex.contraindication_tags?.some(t => contras.has(t))) return false;
+    // exercise_types intersection with disabled set excludes the exercise.
+    if ((ex.exercise_types || []).some(t => disabledTypes.has(t))) return false;
     if (opts.excludeIds && opts.excludeIds.has(ex.id)) return false;
     if (recentlyUsed.has(ex.id) && !opts.allowRecent) return false;
     return true;
@@ -830,6 +834,12 @@ const prettyEquipment = (e) => ({
   recomp: "Recomp", preserve: "Preserve", rebuild: "Rebuild",
   "0": "Phase 0", "1": "Phase 1", "2": "Phase 2"
 }[e] || e);
+
+const prettyType = (t) => ({
+  strength: "Strength", mobility: "Mobility", cardio: "Cardio",
+  flexibility: "Flexibility", stability: "Stability", power: "Power",
+  rehab: "Rehab", warmup: "Warm-up"
+}[t] || t);
 
 const prettyContra = (c) => ({
   right_anterior_shoulder: "Right anterior shoulder",
@@ -1437,6 +1447,20 @@ function SettingsScreen() {
         saveState(); render();
       }}, ["Clear rest days"]) : null
     ])
+  ]));
+
+  // Exercise types — multi-tag controlled vocab. Disabling a type
+  // removes anything tagged with it from the planning pool.
+  const ALL_TYPES = ["strength","mobility","cardio","flexibility","stability","power","rehab","warmup"];
+  const enabledTypes = new Set(ALL_TYPES.filter(t => !(STATE.profile.disabledTypes || []).includes(t)));
+  wrap.appendChild(section("Exercise types I'm doing", [
+    el("p", { class: "text-xs text-mute mb-2" }, ["Tap to toggle. Anything tagged with a disabled type is filtered out of your plan."]),
+    chipSelect(ALL_TYPES, enabledTypes, t => prettyType(t)),
+    el("button", { class: "mt-3 text-xs text-accent", onClick: () => {
+      STATE.profile.disabledTypes = ALL_TYPES.filter(t => !enabledTypes.has(t));
+      delete STATE.sessions[sessionIdFor(new Date())];
+      saveState(); render();
+    }}, ["Save types"])
   ]));
 
   // Equipment

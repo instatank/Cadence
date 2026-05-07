@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "version": "2.1",
-    "schema": "cadence-exercise-v2.1",
-    "total_count": 112,
+    "version": "2.2",
+    "schema": "cadence-exercise-v2.2",
+    "total_count": 117,
     "contraindication_tag_legend": {
       "right_anterior_shoulder": "Filter when user has right anterior shoulder issue (pressing, loaded pulls, front-round)",
       "right_medial_ankle": "Filter when user has right medial ankle issue (heavy bilateral loading, aggressive dorsiflexion)"
@@ -18,13 +18,23 @@
       "yoga_mat",
       "bodyweight"
     ],
-    "changelog": "v2: Added cue field (one-line form note), video fields (video_url, video_source, video_duration_sec), new categories (mobility_movement, yoga_asana), McGill curl-up, TKE band; v2.1: Added modality field (reps|time|rounds); fixed [1,1] placeholders for yoga/holds/foam-roll with real ranges; added 9 new core/ab + warmup drills (crunch, bicycle crunch, lying leg raise, reverse crunch, side-lying leg raise, flutter kicks, mountain climbers, toe touches, heel touches).",
+    "changelog": "v2: Added cue field (one-line form note), video fields (video_url, video_source, video_duration_sec), new categories (mobility_movement, yoga_asana), McGill curl-up, TKE band; v2.1: Added modality field (reps|time|rounds); fixed [1,1] placeholders for yoga/holds/foam-roll with real ranges; added 9 new core/ab + warmup drills (crunch, bicycle crunch, lying leg raise, reverse crunch, side-lying leg raise, flutter kicks, mountain climbers, toe touches, heel touches). v2.2: Added exercise_types[] multi-tag (controlled vocab: strength, mobility, cardio, flexibility, stability, power, rehab, warmup). Tagged all 112 prior exercises by category + targeted overrides. Added 5 cardio entries (Jumping Jacks, High Knees, Butt Kicks, Jump Rope, Burpees) — gated to Phase 2 with both relevant contraindication tags; user-disabled by default until cardio is enabled in Settings.",
     "video_field_notes": "video_url null = pending. Populate in priority order: Phase 0 first (~55 exercises), then Phase 1, then Phase 2.",
     "video_population_status": "Batches 1-2 complete: 19 unfamiliar/high-priority exercises (KOT mobility, Strength Side, McGill, TKE, calf rehab, hip CARs, basic yoga). 3 yoga (Triangle, Std/Seated Forward Fold) deferred to Batch 3 with resistance staples.",
     "modality_legend": {
       "reps": "Sets × repetitions × optional load. Default for resistance work.",
       "time": "Sets × duration in seconds. Holds, isometrics, foam roll, yoga asanas.",
       "rounds": "Sets × rounds (often per-side, e.g. CARs)."
+    },
+    "exercise_type_legend": {
+      "strength": "Primary strength / hypertrophy work — main lifts and accessories.",
+      "mobility": "Active range-of-motion work — joint articulation, movement quality.",
+      "cardio": "Cardiovascular conditioning — sustained elevated heart rate.",
+      "flexibility": "Passive lengthening — held stretches, yoga asanas.",
+      "stability": "Balance, proprioception, anti-rotation, single-leg control.",
+      "power": "Explosive / plyometric — fast intent, jumping, throwing.",
+      "rehab": "Physio-specific — corrective work or pain-driven exercises.",
+      "warmup": "Useful as a warmup or activation drill before main work."
     }
   },
   "exercises": [
@@ -75,7 +85,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_bulgarian_split_squat",
@@ -125,7 +138,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_step_up",
@@ -175,7 +191,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_front_squat",
@@ -223,7 +242,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_reverse_lunge",
@@ -272,7 +294,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_walking_lunge",
@@ -323,7 +348,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_cyclist_squat",
@@ -370,7 +398,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "band_spanish_squat",
@@ -418,7 +449,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength",
+        "rehab"
+      ]
     },
     {
       "id": "db_rdl",
@@ -467,7 +502,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bb_rdl",
@@ -516,7 +554,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_single_leg_rdl",
@@ -566,7 +607,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength",
+        "stability"
+      ]
     },
     {
       "id": "bb_hip_thrust",
@@ -614,7 +659,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_glute_bridge",
@@ -662,7 +710,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength",
+        "warmup"
+      ]
     },
     {
       "id": "bb_good_morning",
@@ -707,7 +759,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "cable_pull_through",
@@ -755,7 +810,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "band_hip_thrust",
@@ -803,7 +861,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bb_bench_press",
@@ -844,7 +905,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_bench_press",
@@ -885,7 +949,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_pushup",
@@ -926,7 +993,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_incline_press",
@@ -967,7 +1037,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bb_incline_press",
@@ -1008,7 +1081,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_decline_press",
@@ -1048,7 +1124,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "cable_chest_fly",
@@ -1087,7 +1166,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bb_ohp",
@@ -1128,7 +1210,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_shoulder_press",
@@ -1168,7 +1253,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_seated_press",
@@ -1209,7 +1297,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_arnold_press",
@@ -1251,7 +1342,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_lateral_raise",
@@ -1288,7 +1382,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bb_bent_row",
@@ -1330,7 +1427,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_single_arm_row",
@@ -1372,7 +1472,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_chest_supported_row",
@@ -1415,7 +1518,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "cable_seated_row",
@@ -1457,7 +1563,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_inverted_row",
@@ -1499,7 +1608,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bb_pendlay_row",
@@ -1541,7 +1653,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bb_meadows_row",
@@ -1582,7 +1697,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_pullup",
@@ -1622,7 +1740,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_chinup",
@@ -1662,7 +1783,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "cable_lat_pulldown",
@@ -1702,7 +1826,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "cable_straight_arm_pulldown",
@@ -1741,7 +1868,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "band_pulldown",
@@ -1780,7 +1910,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "band_pull_apart",
@@ -1827,7 +1960,12 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "strength",
+        "warmup"
+      ]
     },
     {
       "id": "cable_face_pull",
@@ -1876,7 +2014,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "band_face_pull",
@@ -1925,7 +2067,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "db_prone_y_raise",
@@ -1972,7 +2118,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "db_prone_t_raise",
@@ -2020,7 +2170,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "db_prone_w_raise",
@@ -2070,7 +2224,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "db_rear_delt_fly",
@@ -2118,7 +2276,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "cable_reverse_fly",
@@ -2166,7 +2328,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "bw_scap_pullup",
@@ -2213,7 +2379,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "bw_dead_hang",
@@ -2260,7 +2430,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "bw_wall_slide",
@@ -2307,7 +2481,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "band_external_rotation",
@@ -2354,7 +2532,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "rehab"
+      ]
     },
     {
       "id": "bw_tib_raise",
@@ -2399,7 +2581,10 @@
       "video_url": "https://www.youtube.com/watch?v=VzIcGAgBiaM",
       "video_source": "KOT / ATG system demo",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_eccentric_calf_raise",
@@ -2446,7 +2631,10 @@
       "video_url": "https://www.youtube.com/watch?v=d2GgSoHvIXo",
       "video_source": "Kinetic U Sports Rehab",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "band_iso_tib_post",
@@ -2491,7 +2679,10 @@
       "video_url": "https://www.youtube.com/watch?v=MIRYOo1YLUs",
       "video_source": "Tibialis Posterior band tutorial",
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_standing_calf_raise",
@@ -2535,7 +2726,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_seated_calf_raise",
@@ -2579,7 +2773,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_single_leg_balance",
@@ -2629,7 +2826,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_dead_bug",
@@ -2675,7 +2875,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_bird_dog",
@@ -2724,7 +2927,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "band_pallof_press",
@@ -2770,7 +2976,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_side_plank",
@@ -2819,7 +3028,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_hollow_hold",
@@ -2865,7 +3077,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "strength",
+        "stability"
+      ]
     },
     {
       "id": "bw_hanging_knee_raise",
@@ -2905,7 +3121,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_curl",
@@ -2950,7 +3169,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_hammer_curl",
@@ -2996,7 +3218,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "cable_curl",
@@ -3041,7 +3266,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "cable_tricep_pushdown",
@@ -3084,7 +3312,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "band_tricep_pushdown",
@@ -3127,7 +3358,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "db_overhead_tricep_ext",
@@ -3164,7 +3398,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "foam_roll_thoracic",
@@ -3208,7 +3445,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "foam_roll_lats",
@@ -3252,7 +3493,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "foam_roll_glutes",
@@ -3296,7 +3541,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "foam_roll_quads",
@@ -3340,7 +3589,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "foam_roll_it_band",
@@ -3384,7 +3637,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "foam_roll_calves",
@@ -3428,7 +3685,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "stretch_90_90_hip",
@@ -3471,7 +3732,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "stretch_couch",
@@ -3514,7 +3779,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "stretch_cat_cow",
@@ -3557,7 +3826,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "stretch_childs_pose_side",
@@ -3600,7 +3873,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility",
+        "flexibility"
+      ]
     },
     {
       "id": "physio_wall_pushup_wide",
@@ -3649,7 +3926,10 @@
       "video_url": "https://www.youtube.com/watch?v=QGCW-jL1O4s",
       "video_source": "Tim Keeley / Physio REHAB",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "rehab"
+      ]
     },
     {
       "id": "physio_breaststroke_prone",
@@ -3698,7 +3978,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "rehab"
+      ]
     },
     {
       "id": "physio_eccentric_tib_post",
@@ -3744,7 +4027,10 @@
       "video_url": "https://www.youtube.com/watch?v=XBvfk3zwiiE",
       "video_source": "Physiotutors",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "rehab"
+      ]
     },
     {
       "id": "physio_neural_floss_tibial",
@@ -3788,7 +4074,10 @@
       "video_url": "https://www.youtube.com/watch?v=DmIh9a6H5Kw",
       "video_source": "Tibial Nerve / Tarsal Tunnel exercises",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "rehab"
+      ]
     },
     {
       "id": "physio_contrast_bath",
@@ -3830,7 +4119,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "rounds"
+      "modality": "rounds",
+      "exercise_types": [
+        "rehab"
+      ]
     },
     {
       "id": "kot_atg_split_squat",
@@ -3881,7 +4173,10 @@
       "video_url": "https://www.youtube.com/watch?v=g6KrlrOq4mw",
       "video_source": "Knees Over Toes Guy",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility"
+      ]
     },
     {
       "id": "kot_patrick_step",
@@ -3932,7 +4227,10 @@
       "video_url": "https://www.youtube.com/watch?v=16AjEFQADvI",
       "video_source": "ATG (KOT system) demonstration",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility"
+      ]
     },
     {
       "id": "ss_cossack_squat",
@@ -3982,7 +4280,10 @@
       "video_url": "https://www.youtube.com/watch?v=tpczTeSkHz0",
       "video_source": "FitnessFAQs",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility"
+      ]
     },
     {
       "id": "ss_jefferson_curl",
@@ -4021,7 +4322,10 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility"
+      ]
     },
     {
       "id": "ss_hip_cars",
@@ -4067,7 +4371,10 @@
       "video_url": "https://www.youtube.com/watch?v=5kM-o61Z14I",
       "video_source": "Kinetic Sports Rehab",
       "video_duration_sec": null,
-      "modality": "rounds"
+      "modality": "rounds",
+      "exercise_types": [
+        "mobility"
+      ]
     },
     {
       "id": "ss_shoulder_cars",
@@ -4113,7 +4420,10 @@
       "video_url": "https://www.youtube.com/watch?v=CLWFwun1BfQ",
       "video_source": "Kinetic Sports Rehab",
       "video_duration_sec": null,
-      "modality": "rounds"
+      "modality": "rounds",
+      "exercise_types": [
+        "mobility"
+      ]
     },
     {
       "id": "ss_deep_squat_hold",
@@ -4163,7 +4473,10 @@
       "video_url": "https://www.youtube.com/watch?v=bjV07PRoGGo",
       "video_source": "Squat University",
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "mobility"
+      ]
     },
     {
       "id": "ss_worlds_greatest_stretch",
@@ -4213,7 +4526,10 @@
       "video_url": "https://www.youtube.com/watch?v=-CiWQ2IvY34",
       "video_source": "Squat University",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "mobility"
+      ]
     },
     {
       "id": "yoga_downward_dog_supported",
@@ -4263,7 +4579,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "flexibility",
+        "mobility"
+      ]
     },
     {
       "id": "yoga_pigeon_pose",
@@ -4311,7 +4631,11 @@
       "video_url": "https://www.youtube.com/watch?v=KfElAgr72Vo",
       "video_source": "Tom Merrick (Bodyweight Warrior) — Hip Mobility Routine V3 (covers pigeon)",
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "flexibility",
+        "mobility"
+      ]
     },
     {
       "id": "yoga_warrior_2",
@@ -4360,7 +4684,11 @@
       "video_url": "https://www.youtube.com/watch?v=_f8qSEUYrdU",
       "video_source": "Yoga Warrior 2 alignment breakdown",
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "flexibility",
+        "mobility"
+      ]
     },
     {
       "id": "yoga_triangle",
@@ -4408,7 +4736,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "flexibility",
+        "mobility"
+      ]
     },
     {
       "id": "yoga_standing_forward_fold",
@@ -4456,7 +4788,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "flexibility",
+        "mobility"
+      ]
     },
     {
       "id": "yoga_seated_forward_fold",
@@ -4502,7 +4838,11 @@
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "flexibility",
+        "mobility"
+      ]
     },
     {
       "id": "yoga_butterfly",
@@ -4548,7 +4888,11 @@
       "video_url": "https://www.youtube.com/watch?v=KfElAgr72Vo",
       "video_source": "Tom Merrick (Bodyweight Warrior) — Hip Mobility Routine V3 (covers butterfly)",
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "flexibility",
+        "mobility"
+      ]
     },
     {
       "id": "yoga_thread_the_needle",
@@ -4597,7 +4941,11 @@
       "video_url": "https://www.youtube.com/watch?v=vOukJVt56os",
       "video_source": "Thread the Needle (Parsva Balasana) tutorial",
       "video_duration_sec": null,
-      "modality": "time"
+      "modality": "time",
+      "exercise_types": [
+        "flexibility",
+        "mobility"
+      ]
     },
     {
       "id": "physio_tke_band",
@@ -4646,7 +4994,10 @@
       "video_url": "https://www.youtube.com/watch?v=7xG3MeoLjC0",
       "video_source": "Knee Pain Tutorial channel",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "rehab"
+      ]
     },
     {
       "id": "core_mcgill_curlup",
@@ -4692,7 +5043,10 @@
       "video_url": "https://www.youtube.com/watch?v=FmZwkgg7pqU",
       "video_source": "McGill Big 3 full tutorial",
       "video_duration_sec": null,
-      "modality": "reps"
+      "modality": "reps",
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_crunch",
@@ -4739,7 +5093,10 @@
       "notes": "Short ROM — focus on contracting upper abs.",
       "video_url": null,
       "video_source": null,
-      "video_duration_sec": null
+      "video_duration_sec": null,
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_bicycle_crunch",
@@ -4788,7 +5145,10 @@
       "notes": "Count each side as 1 rep — so 12 reps total covers 12 per side.",
       "video_url": null,
       "video_source": null,
-      "video_duration_sec": null
+      "video_duration_sec": null,
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_lying_leg_raise",
@@ -4836,7 +5196,10 @@
       "notes": "Press lower back into floor. If it arches, bend knees slightly.",
       "video_url": null,
       "video_source": null,
-      "video_duration_sec": null
+      "video_duration_sec": null,
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_reverse_crunch",
@@ -4883,7 +5246,10 @@
       "notes": "Easier on lower back than leg raises for some lifters.",
       "video_url": null,
       "video_source": null,
-      "video_duration_sec": null
+      "video_duration_sec": null,
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_side_lying_leg_raise",
@@ -4931,7 +5297,10 @@
       "notes": "Glute medius — also stabilizes ankle/knee chain. Ankle-friendly.",
       "video_url": null,
       "video_source": null,
-      "video_duration_sec": null
+      "video_duration_sec": null,
+      "exercise_types": [
+        "rehab"
+      ]
     },
     {
       "id": "bw_flutter_kick",
@@ -4979,7 +5348,10 @@
       "notes": "Stop if low back arches.",
       "video_url": null,
       "video_source": null,
-      "video_duration_sec": null
+      "video_duration_sec": null,
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_mountain_climber",
@@ -5029,7 +5401,11 @@
       "notes": "Mild anterior shoulder load in plank — gated to Phase 1+ when shoulder cleared.",
       "video_url": null,
       "video_source": null,
-      "video_duration_sec": null
+      "video_duration_sec": null,
+      "exercise_types": [
+        "mobility",
+        "cardio"
+      ]
     },
     {
       "id": "bw_toe_touch",
@@ -5076,7 +5452,10 @@
       "notes": "Upper abs focus. Easier than leg raises if hip flexors are tight.",
       "video_url": null,
       "video_source": null,
-      "video_duration_sec": null
+      "video_duration_sec": null,
+      "exercise_types": [
+        "strength"
+      ]
     },
     {
       "id": "bw_heel_touch",
@@ -5119,6 +5498,233 @@
       "is_physio": false,
       "cue": "On back, knees bent, alternately reach hand toward heel on same side — small lateral crunch.",
       "notes": "Each side = 1 rep. Light oblique work.",
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null,
+      "exercise_types": [
+        "strength"
+      ]
+    },
+    {
+      "id": "cardio_jumping_jacks",
+      "name": "Jumping Jacks",
+      "category": "mobility_movement",
+      "movement_pattern": "plyometric_alternating",
+      "primary_movers": [
+        "calves",
+        "hip_abductors"
+      ],
+      "secondary_movers": [
+        "shoulders",
+        "core"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "modality": "time",
+      "rep_ranges": {
+        "phase_2": [
+          30,
+          60
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "plyometric"
+      ],
+      "contraindication_tags": [
+        "right_medial_ankle"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "cue": "Soft landings, arms full overhead, knees stay slightly bent.",
+      "notes": "Standard cardio warmup. Gated until ankle cleared.",
+      "exercise_types": [
+        "cardio",
+        "warmup"
+      ],
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cardio_high_knees",
+      "name": "High Knees",
+      "category": "mobility_movement",
+      "movement_pattern": "running_in_place",
+      "primary_movers": [
+        "hip_flexors",
+        "calves"
+      ],
+      "secondary_movers": [
+        "core"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "modality": "time",
+      "rep_ranges": {
+        "phase_2": [
+          20,
+          45
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "plyometric"
+      ],
+      "contraindication_tags": [
+        "right_medial_ankle"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "cue": "Drive knees to hip height, light on the balls of feet, tall posture.",
+      "notes": "Cardio + hip-flexor warmup. Gated until ankle cleared.",
+      "exercise_types": [
+        "cardio",
+        "warmup"
+      ],
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cardio_butt_kicks",
+      "name": "Butt Kicks",
+      "category": "mobility_movement",
+      "movement_pattern": "running_in_place",
+      "primary_movers": [
+        "hamstrings"
+      ],
+      "secondary_movers": [
+        "calves"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "low",
+      "modality": "time",
+      "rep_ranges": {
+        "phase_2": [
+          20,
+          45
+        ]
+      },
+      "rest_seconds": 30,
+      "position_tags": [
+        "plyometric"
+      ],
+      "contraindication_tags": [
+        "right_medial_ankle"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "cue": "Heels to glutes, fast turnover, light landings.",
+      "notes": "Hamstring warmup. Gated until ankle cleared.",
+      "exercise_types": [
+        "cardio",
+        "warmup"
+      ],
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cardio_jump_rope",
+      "name": "Jump Rope",
+      "category": "mobility_movement",
+      "movement_pattern": "plyometric",
+      "primary_movers": [
+        "calves"
+      ],
+      "secondary_movers": [
+        "forearms",
+        "core"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "medium",
+      "modality": "time",
+      "rep_ranges": {
+        "phase_2": [
+          60,
+          180
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "plyometric",
+        "ankle_dorsiflexion_loaded"
+      ],
+      "contraindication_tags": [
+        "right_medial_ankle"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "cue": "Tiny hops, wrists turn the rope, elbows tucked.",
+      "notes": "High ankle load — strict Phase 2 only after full ankle clearance.",
+      "exercise_types": [
+        "cardio"
+      ],
+      "video_url": null,
+      "video_source": null,
+      "video_duration_sec": null
+    },
+    {
+      "id": "cardio_burpee",
+      "name": "Burpees",
+      "category": "mobility_movement",
+      "movement_pattern": "full_body_plyometric",
+      "primary_movers": [
+        "legs",
+        "chest"
+      ],
+      "secondary_movers": [
+        "core",
+        "shoulders"
+      ],
+      "equipment_required": [
+        "bodyweight"
+      ],
+      "fatigue_cost": "high",
+      "modality": "reps",
+      "rep_ranges": {
+        "phase_2": [
+          8,
+          15
+        ]
+      },
+      "rest_seconds": 60,
+      "position_tags": [
+        "plyometric",
+        "anterior_loaded_shoulder"
+      ],
+      "contraindication_tags": [
+        "right_anterior_shoulder",
+        "right_medial_ankle"
+      ],
+      "phase_eligibility": [
+        2
+      ],
+      "is_physio": false,
+      "cue": "Squat, hands down, kick back to plank, push-up optional, jump up.",
+      "notes": "Both contraindications apply. Strict Phase 2 only.",
+      "exercise_types": [
+        "cardio",
+        "power",
+        "strength"
+      ],
       "video_url": null,
       "video_source": null,
       "video_duration_sec": null

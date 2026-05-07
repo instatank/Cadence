@@ -71,6 +71,7 @@ const RELATED_CATEGORIES = {
 };
 
 const DEFAULT_CONTRA = ["right_anterior_shoulder", "right_medial_ankle"];
+const DEFAULT_DISABLED_TYPES = ["cardio"];
 const DEFAULT_EQUIPMENT = new Set([
   "adjustable_dumbbells","barbell_plates","adjustable_bench","pull_up_bar",
   "resistance_bands","cable_machine","foam_roller","yoga_mat","bodyweight"
@@ -94,6 +95,7 @@ function filterPool(phase, cardType) {
     if (!ex.phase_eligibility?.includes(phase)) return false;
     if (!ex.equipment_required?.every(e => DEFAULT_EQUIPMENT.has(e))) return false;
     if (ex.contraindication_tags?.some(t => DEFAULT_CONTRA.includes(t))) return false;
+    if ((ex.exercise_types || []).some(t => DEFAULT_DISABLED_TYPES.includes(t))) return false;
     if (recent.has(ex.id)) return false;
     return true;
   });
