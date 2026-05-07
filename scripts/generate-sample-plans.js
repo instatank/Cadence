@@ -34,19 +34,20 @@ const CARD_META = {
   off:               { title: "Off Day",            duration: 0,  kind: "off" }
 };
 
+const W = ["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }];
 const CARD_RECIPES = {
-  light_lower:       [["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}]],
-  light_lower_push:  [["quad_dominant", 2, {}], ["hinge_posterior", 1, {}], ["scap_postural", 2, {}], ["calf_lower_leg", 1, {}]],
-  posterior_scap:    [["scap_postural", 4, {}], ["horizontal_pull", 1, {}], ["physio_specific", 1, {}]],
+  light_lower:       [W, ["quad_dominant", 2, {}], ["hinge_posterior", 1, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  light_lower_push:  [W, ["quad_dominant", 1, {}], ["hinge_posterior", 1, {}], ["scap_postural", 2, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  posterior_scap:    [W, ["scap_postural", 3, {}], ["horizontal_pull", 1, {}], ["physio_specific", 1, {}], ["core", 1, {}]],
   recovery:          [["recovery_mobility", 2, {}], ["mobility_movement", 2, {}], ["yoga_asana", 1, {}], ["physio_specific", 2, {}]],
-  lower:             [["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
-  push_modified:     [["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["arms_isolation", 2, { filter: "tricep" }]],
-  pull_modified:     [["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["arms_isolation", 2, { filter: "bicep" }]],
-  full_body:         [["quad_dominant", 1, {}], ["hinge_posterior", 1, {}], ["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["scap_postural", 1, {}], ["core", 1, {}]],
-  push:              [["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["horizontal_push", 1, { isolation: true }], ["arms_isolation", 2, { filter: "tricep" }]],
-  pull:              [["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 2, { filter: "bicep" }]],
-  legs:              [["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["quad_dominant", 1, { isolation: true }], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
-  upper:             [["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["vertical_push", 1, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 1, {}]]
+  lower:             [W, ["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  push_modified:     [W, ["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["arms_isolation", 2, { filter: "tricep" }], ["core", 1, {}]],
+  pull_modified:     [W, ["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["arms_isolation", 2, { filter: "bicep" }], ["core", 1, {}]],
+  full_body:         [W, ["quad_dominant", 1, {}], ["hinge_posterior", 1, {}], ["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["scap_postural", 1, {}], ["core", 1, {}]],
+  push:              [W, ["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["horizontal_push", 1, { isolation: true }], ["arms_isolation", 2, { filter: "tricep" }], ["core", 1, {}]],
+  pull:              [W, ["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 2, { filter: "bicep" }], ["core", 1, {}]],
+  legs:              [W, ["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["quad_dominant", 1, { isolation: true }], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  upper:             [W, ["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["vertical_push", 1, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 1, {}], ["core", 1, {}]]
 };
 
 const RECOVERY_BLOCK = [
@@ -89,8 +90,8 @@ function recentSet(cardType, n) {
   return s;
 }
 
-function filterPool(phase, cardType) {
-  const recent = recentSet(cardType, 2);
+function filterPool(phase, cardType, allowRecent = false) {
+  const recent = allowRecent ? new Set() : recentSet(cardType, 2);
   return EXERCISES.filter(ex => {
     if (!ex.phase_eligibility?.includes(phase)) return false;
     if (!ex.equipment_required?.every(e => DEFAULT_EQUIPMENT.has(e))) return false;
@@ -102,22 +103,32 @@ function filterPool(phase, cardType) {
 }
 
 function selectFromCategory(pool, category, count, opts = {}) {
-  let cands = pool.filter(ex => ex.category === category);
+  let cands;
+  if (opts.byTypes && opts.byTypes.length) {
+    const wanted = new Set(opts.byTypes);
+    cands = pool.filter(ex => (ex.exercise_types || []).some(t => wanted.has(t)));
+  } else {
+    cands = pool.filter(ex => ex.category === category);
+  }
   if (opts.filter === "tricep") cands = cands.filter(ex => /tricep|pushdown|skull|overhead/i.test(ex.name) || ex.primary_movers?.includes("triceps"));
   if (opts.filter === "bicep")  cands = cands.filter(ex => /curl/i.test(ex.name) || ex.primary_movers?.includes("biceps"));
   if (opts.isolation) cands = cands.filter(ex => ex.fatigue_cost === "low" || /fly|extension|curl|raise|pushdown/i.test(ex.name));
-  cands.sort((a, b) => fatigueRank(b) - fatigueRank(a));
+  if (opts.warmup) cands.sort((a, b) => fatigueRank(a) - fatigueRank(b));
+  else cands.sort((a, b) => fatigueRank(b) - fatigueRank(a));
   const seen = new Set();
   const out = [];
   for (const ex of cands) { if (out.length >= count) break; if (seen.has(ex.id)) continue; out.push(ex); seen.add(ex.id); }
   return out;
 }
 
-function setsForExercise(ex, cardType, week) {
+function setsForExercise(ex, cardType, week, slotOpts = {}) {
   const meta = CARD_META[cardType];
+  if (slotOpts.warmup) return 1;
   if (meta.kind !== "resistance") return 1;
-  let base = 3; // Phase 0/1
-  if (ex.fatigue_cost === "low") base = Math.max(2, base - 1);
+  const isCore = ex.category === "core" || ex.category === "physio_specific";
+  let base = 3;
+  if (isCore) base = 2;
+  if (ex.fatigue_cost === "low" && !isCore) base = Math.max(2, base - 1);
   if (week === 5) base = Math.max(2, Math.round(base * 0.6));
   return base;
 }
@@ -130,30 +141,43 @@ function generateSession(phase, date, week) {
 
   const recipe = CARD_RECIPES[cardType] || [];
   const pool = filterPool(phase, cardType);
+  const noRecentPool = filterPool(phase, cardType, true);
   const planned = [];
   const used = new Set();
-  function pushPick(ex) {
+  function pushPick(ex, slotOpts = {}) {
     used.add(ex.id);
-    const sets = setsForExercise(ex, cardType, week);
+    const sets = setsForExercise(ex, cardType, week, slotOpts);
     const repRange = ex.rep_ranges?.[`phase_${phase}`] || [8,12];
     const isUnilateral = (ex.position_tags || []).includes("unilateral");
     planned.push({
       id: ex.id, name: ex.name, category: ex.category, sets, repRange,
-      rest_seconds: ex.rest_seconds, cue: ex.cue || "", isPhysio: ex.is_physio,
+      rest_seconds: slotOpts.warmup ? 30 : ex.rest_seconds, cue: ex.cue || "", isPhysio: ex.is_physio,
+      isWarmup: !!slotOpts.warmup,
       modality: ex.modality || "reps", unilateral: isUnilateral
     });
   }
   for (const [cat, count, opts] of recipe) {
     const remaining = pool.filter(ex => !used.has(ex.id));
     let picks = selectFromCategory(remaining, cat, count, opts);
-    if (picks.length < count) {
+    if (picks.length < count && !opts.byTypes) {
       for (const fb of (RELATED_CATEGORIES[cat] || [])) {
         if (picks.length >= count) break;
         const fbRemaining = pool.filter(ex => !used.has(ex.id) && !picks.find(p => p.id === ex.id));
         picks = picks.concat(selectFromCategory(fbRemaining, fb, count - picks.length, opts));
       }
     }
-    for (const ex of picks) pushPick(ex);
+    if (picks.length < count) {
+      const r2 = noRecentPool.filter(ex => !used.has(ex.id) && !picks.find(p => p.id === ex.id));
+      picks = picks.concat(selectFromCategory(r2, cat, count - picks.length, opts));
+      if (picks.length < count && !opts.byTypes) {
+        for (const fb of (RELATED_CATEGORIES[cat] || [])) {
+          if (picks.length >= count) break;
+          const r2fb = noRecentPool.filter(ex => !used.has(ex.id) && !picks.find(p => p.id === ex.id));
+          picks = picks.concat(selectFromCategory(r2fb, fb, count - picks.length, opts));
+        }
+      }
+    }
+    for (const ex of picks) pushPick(ex, opts);
   }
   // Track for rotation
   usedHistory[cardType] = (usedHistory[cardType] || []).concat([planned.map(p => p.id)]);
@@ -199,7 +223,8 @@ function runPhase(phase, label, weeksToShow) {
         const unit = p.modality === "time" ? "sec" : p.modality === "rounds" ? "rounds" : "reps";
         const side = p.unilateral ? " /side" : "";
         const prescription = `${p.sets} × ${p.repRange[0]}–${p.repRange[1]} ${unit}${side}`;
-        md.push(`| | | ${i+1}. ${p.name}${p.isPhysio ? " *(physio)*" : ""} | ${prescription} | ${p.rest_seconds}s |`);
+        const tag = p.isWarmup ? " *(warmup)*" : p.isPhysio ? " *(physio)*" : "";
+        md.push(`| | | ${i+1}. ${p.name}${tag} | ${prescription} | ${p.rest_seconds}s |`);
         csvRows.push([phase, week, dayName(date.getDay()), dateISO, session.meta.title, i+1, p.name, p.category, p.sets, `${p.repRange[0]}-${p.repRange[1]} ${unit}${side}`, p.rest_seconds, (p.cue || "").replace(/[\r\n]+/g," ")]);
       });
       session.recovery.forEach(r => {

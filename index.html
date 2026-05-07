@@ -160,22 +160,43 @@ const CARD_META = {
 const isRestDay = (iso) => (STATE.restDays || []).includes(iso);
 
 // Card type → category targets (count of exercise slots from each category, in order)
-// Compound-first ordering by how slots are listed.
+// Recipe slot syntax:
+//   [category, count, opts]
+//   - category: a string matching ex.category, OR "*" with opts.byTypes for tag-based selection
+//   - count: number of exercises to pull
+//   - opts.byTypes: ["warmup"] selects from exercise_types tag instead of category
+//   - opts.filter: "tricep" | "bicep"
+//   - opts.isolation: true = prefer isolation/lower-fatigue picks
+//   - opts.warmup: true = mark as warmup block (1 set, no progression, skip in deload)
+//   - opts.optional: true = OK if pool can't fill it (e.g. warmup gracefully degrades)
+//
+// Resistance days now lead with a warmup slot and end with a core slot.
 const CARD_RECIPES = {
-  light_lower:       [["quad_dominant", 2, { exclude: ["bilateral_squat_heavy"] }], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}]],
-  light_lower_push:  [["quad_dominant", 2, {}], ["hinge_posterior", 1, {}], ["scap_postural", 2, {}], ["calf_lower_leg", 1, {}]],
-  posterior_scap:    [["scap_postural", 4, {}], ["horizontal_pull", 1, {}], ["physio_specific", 1, {}]],
+  light_lower:       [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["quad_dominant", 2, {}], ["hinge_posterior", 1, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  light_lower_push:  [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["quad_dominant", 1, {}], ["hinge_posterior", 1, {}], ["scap_postural", 2, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  posterior_scap:    [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["scap_postural", 3, {}], ["horizontal_pull", 1, {}], ["physio_specific", 1, {}], ["core", 1, {}]],
   recovery:          [["recovery_mobility", 2, {}], ["mobility_movement", 2, {}], ["yoga_asana", 1, {}], ["physio_specific", 2, {}]],
 
-  lower:             [["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
-  push_modified:     [["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["arms_isolation", 2, { filter: "tricep" }]],
-  pull_modified:     [["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["arms_isolation", 2, { filter: "bicep" }]],
-  full_body:         [["quad_dominant", 1, {}], ["hinge_posterior", 1, {}], ["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["scap_postural", 1, {}], ["core", 1, {}]],
+  lower:             [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  push_modified:     [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["arms_isolation", 2, { filter: "tricep" }], ["core", 1, {}]],
+  pull_modified:     [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["arms_isolation", 2, { filter: "bicep" }], ["core", 1, {}]],
+  full_body:         [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["quad_dominant", 1, {}], ["hinge_posterior", 1, {}], ["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["scap_postural", 1, {}], ["core", 1, {}]],
 
-  push:              [["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["horizontal_push", 1, { isolation: true }], ["arms_isolation", 2, { filter: "tricep" }]],
-  pull:              [["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 2, { filter: "bicep" }]],
-  legs:              [["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["quad_dominant", 1, { isolation: true }], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
-  upper:             [["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["vertical_push", 1, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 1, {}]]
+  push:              [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["horizontal_push", 2, {}], ["vertical_push", 1, {}], ["horizontal_push", 1, { isolation: true }], ["arms_isolation", 2, { filter: "tricep" }], ["core", 1, {}]],
+  pull:              [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["horizontal_pull", 2, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 2, { filter: "bicep" }], ["core", 1, {}]],
+  legs:              [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["quad_dominant", 2, {}], ["hinge_posterior", 2, {}], ["quad_dominant", 1, { isolation: true }], ["calf_lower_leg", 1, {}], ["core", 1, {}]],
+  upper:             [["*", 1, { byTypes: ["warmup"], warmup: true, optional: true }],
+                      ["horizontal_push", 1, {}], ["horizontal_pull", 1, {}], ["vertical_push", 1, {}], ["vertical_pull", 1, {}], ["scap_postural", 1, {}], ["arms_isolation", 1, {}], ["core", 1, {}]]
 };
 
 const RECOVERY_BLOCK = [
@@ -250,7 +271,7 @@ async function loadExerciseSeed() {
 async function seedFirestoreIfNeeded(seed) {
   if (!fbReady) return;
   const meta = await getDoc(doc(fbDb, "system", "seed"));
-  if (meta.exists() && meta.data().version === "2.2") return;
+  if (meta.exists() && meta.data().version === "2.3") return;
   // Batch write all exercises
   const chunks = [];
   for (let i = 0; i < seed.length; i += 400) chunks.push(seed.slice(i, i + 400));
@@ -259,7 +280,7 @@ async function seedFirestoreIfNeeded(seed) {
     chunk.forEach(ex => batch.set(doc(fbDb, "exercises", ex.id), ex));
     await batch.commit();
   }
-  await setDoc(doc(fbDb, "system", "seed"), { version: "2.2", seededAt: serverTimestamp(), count: seed.length });
+  await setDoc(doc(fbDb, "system", "seed"), { version: "2.3", seededAt: serverTimestamp(), count: seed.length });
   console.info(`[Cadence] Seeded ${seed.length} exercises to Firestore.`);
 }
 
@@ -372,7 +393,7 @@ function filterPool(cardType, opts = {}) {
   const equip = new Set(STATE.profile.equipment);
   const contras = new Set(STATE.profile.contraindications);
   const disabledTypes = new Set(STATE.profile.disabledTypes || []);
-  const recentlyUsed = recentExerciseIds(cardType, 2);
+  const recentlyUsed = opts.allowRecent ? new Set() : recentExerciseIds(cardType, 2);
 
   return EXERCISES.filter(ex => {
     if (!ex.phase_eligibility?.includes(phase)) return false;
@@ -381,7 +402,7 @@ function filterPool(cardType, opts = {}) {
     // exercise_types intersection with disabled set excludes the exercise.
     if ((ex.exercise_types || []).some(t => disabledTypes.has(t))) return false;
     if (opts.excludeIds && opts.excludeIds.has(ex.id)) return false;
-    if (recentlyUsed.has(ex.id) && !opts.allowRecent) return false;
+    if (recentlyUsed.has(ex.id)) return false;
     return true;
   });
 }
@@ -396,15 +417,25 @@ function recentExerciseIds(cardType, lastN) {
   return ids;
 }
 
-// 2. Selection — compound first, prefer not-recently-used, low-fatigue tiebreak
+// 2. Selection — compound first, prefer not-recently-used, low-fatigue tiebreak.
+// Slot category may be "*" meaning "any", with opts.byTypes pulling from exercise_types.
 function selectFromCategory(pool, category, count, opts = {}) {
-  let candidates = pool.filter(ex => ex.category === category);
+  let candidates;
+  if (opts.byTypes && opts.byTypes.length) {
+    const wanted = new Set(opts.byTypes);
+    candidates = pool.filter(ex => (ex.exercise_types || []).some(t => wanted.has(t)));
+  } else {
+    candidates = pool.filter(ex => ex.category === category);
+  }
   if (opts.filter === "tricep") candidates = candidates.filter(ex => /tricep|pushdown|skull|overhead/i.test(ex.name) || ex.primary_movers?.includes("triceps"));
   if (opts.filter === "bicep")  candidates = candidates.filter(ex => /curl/i.test(ex.name) || ex.primary_movers?.includes("biceps"));
   if (opts.isolation) candidates = candidates.filter(ex => ex.fatigue_cost === "low" || /fly|extension|curl|raise|pushdown/i.test(ex.name));
-  // compound-first sort: high → medium → low fatigue (compound proxy), then lower fatigue (less drain) — but PRD §8.4 says compound first overall.
-  // We sort compound-first within categories that mix; ordering across categories is preserved by recipe slot order.
-  candidates.sort((a, b) => fatigueRank(b) - fatigueRank(a)); // compounds first
+  // For warmup picks, prefer low-fatigue movement-based options first; otherwise compound-first.
+  if (opts.warmup) {
+    candidates.sort((a, b) => fatigueRank(a) - fatigueRank(b));
+  } else {
+    candidates.sort((a, b) => fatigueRank(b) - fatigueRank(a));
+  }
   // Pick up to count, avoiding duplicates
   const picked = [];
   const seen = new Set();
@@ -419,12 +450,17 @@ function selectFromCategory(pool, category, count, opts = {}) {
 function fatigueRank(ex) { return ({ high: 3, medium: 2, low: 1 })[ex.fatigue_cost] || 1; }
 
 // 3. Sets per exercise
-function setsForExercise(ex, cardType) {
+function setsForExercise(ex, cardType, slotOpts = {}) {
   const phase = STATE.profile.phase;
   const isResistance = CARD_META[cardType]?.kind === "resistance";
-  if (!isResistance) return ex.durationMin ? 1 : 1;
+  // Warmup blocks are always a single set; volume here doesn't count toward working sets.
+  if (slotOpts.warmup) return 1;
+  if (!isResistance) return 1;
+  // Core slot is light by default — 2 sets — to keep working-set volume in PRD bands.
+  const isCore = ex.category === "core" || ex.category === "physio_specific";
   let base = phase === 0 ? 3 : phase === 1 ? 3 : 4;
-  if (ex.fatigue_cost === "low") base = Math.max(2, base - 1);
+  if (isCore) base = 2;
+  if (ex.fatigue_cost === "low" && !isCore) base = Math.max(2, base - 1);
   if (isDeloadWeek()) base = Math.max(2, Math.round(base * 0.6));
   return base;
 }
@@ -469,16 +505,18 @@ function generateSession(date = new Date()) {
   const planned = [];
   const usedIds = new Set();
 
-  function pushPick(ex) {
+  function pushPick(ex, slotOpts = {}) {
     usedIds.add(ex.id);
-    const sets = setsForExercise(ex, cardType);
-    const rx = prescribeLoad(ex);
+    const sets = setsForExercise(ex, cardType, slotOpts);
+    const rx = slotOpts.warmup ? { load: null, reps: ex.rep_ranges?.[`phase_${STATE.profile.phase}`] || [10,12], note: "Warmup" } : prescribeLoad(ex);
     const isUnilateral = (ex.position_tags || []).includes("unilateral");
     planned.push({
       exerciseId: ex.id, name: ex.name, category: ex.category,
       sets: Array.from({ length: sets }, () => ({ reps: null, load: rx.load, completed: false })),
       repRange: rx.reps, prescribedLoad: rx.load, prescribedNote: rx.note,
-      rest_seconds: ex.rest_seconds, isPhysio: ex.is_physio || false, notes: ex.notes || "",
+      rest_seconds: slotOpts.warmup ? 30 : ex.rest_seconds,
+      isPhysio: ex.is_physio || false, isWarmup: !!slotOpts.warmup,
+      notes: ex.notes || "",
       cue: ex.cue || "",
       modality: ex.modality || "reps",
       unilateral: isUnilateral,
@@ -488,21 +526,35 @@ function generateSession(date = new Date()) {
     });
   }
 
+  // Build a wider "no-recent" pool once, only used as a last-resort backfill.
+  const noRecentPool = filterPool(cardType, { allowRecent: true });
+
   for (const [category, count, opts] of recipe) {
     const remaining = pool.filter(ex => !usedIds.has(ex.id));
     let picks = selectFromCategory(remaining, category, count, opts);
-    // Fallback: if not enough exercises in the primary category (often because
-    // contraindications wiped the pool), draw from related categories.
-    if (picks.length < count) {
-      const fallbacks = RELATED_CATEGORIES[category] || [];
-      for (const fb of fallbacks) {
+    // Tier 1 fallback: related categories within the recent-filtered pool.
+    if (picks.length < count && !opts.byTypes) {
+      for (const fb of (RELATED_CATEGORIES[category] || [])) {
         if (picks.length >= count) break;
         const fbRemaining = pool.filter(ex => !usedIds.has(ex.id) && !picks.find(p => p.id === ex.id));
-        const extra = selectFromCategory(fbRemaining, fb, count - picks.length, opts);
-        picks = picks.concat(extra);
+        picks = picks.concat(selectFromCategory(fbRemaining, fb, count - picks.length, opts));
       }
     }
-    for (const ex of picks) pushPick(ex);
+    // Tier 2 fallback: re-allow recently-used exercises (rotation < volume).
+    if (picks.length < count) {
+      const r2 = noRecentPool.filter(ex => !usedIds.has(ex.id) && !picks.find(p => p.id === ex.id));
+      picks = picks.concat(selectFromCategory(r2, category, count - picks.length, opts));
+      if (picks.length < count && !opts.byTypes) {
+        for (const fb of (RELATED_CATEGORIES[category] || [])) {
+          if (picks.length >= count) break;
+          const r2fb = noRecentPool.filter(ex => !usedIds.has(ex.id) && !picks.find(p => p.id === ex.id));
+          picks = picks.concat(selectFromCategory(r2fb, fb, count - picks.length, opts));
+        }
+      }
+    }
+    // Optional slots may legitimately stay empty (e.g. warmup if no warmup-tagged
+    // exercise survived the user's contraindications and equipment).
+    for (const ex of picks) pushPick(ex, opts);
   }
 
   // Recovery card already IS recovery — don't double-append the foam-roll/ice block.
@@ -617,10 +669,7 @@ function appBar(title, opts = {}) {
   }, [left, center, right]);
 }
 
-// Back-compat shim — old header() callers still work, but prefer appBar going forward.
-function header(title, rightBtn) {
-  return appBar(title, { right: rightBtn || null });
-}
+// (header() shim removed — all screens use appBar() directly)
 
 // Display a planned block's prescription line — modality-aware.
 function prescriptionText(p) {
@@ -725,6 +774,7 @@ function SetupScreen() {
     phase: STATE.profile.phase,
     frequency: STATE.profile.frequency,
     sessionLength: STATE.profile.sessionLength,
+    doingCardio: !(STATE.profile.disabledTypes || []).includes("cardio"),
     equipment: new Set(STATE.profile.equipment),
     contraindications: new Set(STATE.profile.contraindications)
   };
@@ -757,6 +807,10 @@ function SetupScreen() {
             el("label", { class: "block text-sm text-mute mb-2" }, ["Session length (min)"]),
             numberStepper(draft.sessionLength, 20, 90, v => draft.sessionLength = v, 5)
           ])
+        ]),
+        el("div", {}, [
+          el("label", { class: "block text-sm text-mute mb-2" }, ["Doing cardio?"]),
+          radioGroup(["no","yes"], draft.doingCardio ? "yes" : "no", v => { draft.doingCardio = (v === "yes"); }, v => v === "yes" ? "Yes" : "Not yet")
         ])
       ]));
     } else if (step === 1) {
@@ -779,7 +833,8 @@ function SetupScreen() {
           if (step < 2) { step++; paint(); return; }
           STATE.profile = {
             goal: draft.goal, phase: draft.phase, frequency: draft.frequency, sessionLength: draft.sessionLength,
-            equipment: [...draft.equipment], contraindications: [...draft.contraindications]
+            equipment: [...draft.equipment], contraindications: [...draft.contraindications],
+            disabledTypes: draft.doingCardio ? [] : ["cardio"]
           };
           STATE.setupDone = true;
           STATE.mesocycle.startDate = todayISO();
@@ -1128,6 +1183,7 @@ function SessionScreen() {
 
   let activeIdx = session.planned.findIndex(p => p.sets.some(s => !s.completed));
   if (activeIdx === -1) activeIdx = session.planned.length; // recovery phase
+  let lastAnimatedIdx = -1; // animate the active card only when activeIdx changes
 
   function paint() {
     wrap.innerHTML = "";
@@ -1171,13 +1227,31 @@ function SessionScreen() {
   }
 
   function exerciseCard(ex, idx) {
-    const card = el("section", { class: "bg-surface border border-hairline rounded-md p-6 shadow-active card-advance" });
-    card.appendChild(el("div", { class: "flex items-start justify-between mb-3" }, [
-      el("div", {}, [
+    const animClass = lastAnimatedIdx === idx ? "" : "card-advance";
+    lastAnimatedIdx = idx;
+    const card = el("section", { class: `bg-surface border border-hairline rounded-md p-6 shadow-active ${animClass}` });
+    const flagBtn = el("button", {
+      class: `inline-flex items-center justify-center w-9 h-9 rounded-sm ${ex.symptomFlag ? "text-warn" : "text-mute hover:text-ink"}`,
+      "aria-label": "Flag symptom",
+      onClick: () => {
+        const turning = !ex.symptomFlag;
+        if (turning && !confirm(`Flag a symptom on ${ex.name}?`)) return;
+        ex.symptomFlag = turning;
+        saveState({ remote: false });
+        paint();
+      }
+    });
+    flagBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V4"/><path d="M4 4h11l-2 4 2 4H4"/></svg>';
+    card.appendChild(el("div", { class: "flex items-start justify-between mb-3 gap-2" }, [
+      el("div", { class: "min-w-0" }, [
         el("div", { class: "t-micro text-mute" }, [`Exercise ${idx+1} of ${session.planned.length}`]),
         el("h2", { class: "t-display text-ink" }, [ex.name])
       ]),
-      ex.isPhysio ? pill("Physio", "accent") : null
+      el("div", { class: "flex items-center gap-1 shrink-0" }, [
+        ex.isPhysio ? pill("Physio", "accent") : null,
+        ex.isWarmup ? pill("Warmup") : null,
+        flagBtn
+      ])
     ]));
     if (ex.cue) card.appendChild(el("p", { class: "text-sm text-ink mb-2" }, [ex.cue]));
     if (ex.notes) card.appendChild(el("p", { class: "text-xs text-mute mb-3" }, [ex.notes]));
@@ -1190,7 +1264,18 @@ function SessionScreen() {
       const row = el("div", { class: "grid grid-cols-[32px_28px_1fr_auto] items-center gap-3 row-press", style: { height: "52px" } });
       const cb = el("button", {
         class: `check w-[26px] h-[26px] rounded-full border-[1.5px] ${set.completed ? "bg-ok border-ok set-check-anim" : "border-dim"}`,
-        onClick: () => { set.completed = !set.completed; saveState({remote:false}); paint(); }
+        onClick: () => {
+          // Quick-log: tapping an empty unchecked set fills reps from last session (or top of range)
+          // and load from prescription. User can still tap-to-expand and edit before/after.
+          if (!set.completed) {
+            const hist = STATE.exerciseHistory[ex.exerciseId];
+            if (set.reps == null) set.reps = hist?.lastReps ?? ex.repRange[1];
+            if (set.load == null) set.load = hist?.lastLoad ?? ex.prescribedLoad ?? null;
+          }
+          set.completed = !set.completed;
+          saveState({remote:false});
+          paint();
+        }
       }, [set.completed ? el("span", { class: "text-accentInk text-xs", style: { lineHeight: "0" } }, ["✓"]) : ""]);
 
       const setNum = el("span", { class: "t-meta num text-mute" }, [String(sIdx + 1)]);
@@ -1236,46 +1321,111 @@ function SessionScreen() {
       }
     });
 
-    // Long-press on card to flag exercise symptom
-    let pressTimer;
-    card.addEventListener("pointerdown", () => {
-      pressTimer = setTimeout(() => {
-        if (confirm(`Flag symptom on ${ex.name}?`)) {
-          ex.symptomFlag = true;
-          saveState({remote:false}); paint();
-        }
-      }, 600);
-    });
-    card.addEventListener("pointerup", () => clearTimeout(pressTimer));
-    card.addEventListener("pointerleave", () => clearTimeout(pressTimer));
-
-    if (ex.symptomFlag) card.appendChild(el("div", { class: "mt-3 text-xs text-warn" }, ["⚠ Symptom flagged"]));
+    if (ex.symptomFlag) card.appendChild(el("div", { class: "mt-3 t-meta text-warn" }, ["⚠ Symptom flagged"]));
 
     // Auto-advance when all sets complete
     if (ex.sets.every(s => s.completed)) {
       setTimeout(() => { activeIdx++; paint(); }, 250);
     }
 
-    card.appendChild(el("div", { class: "mt-4 grid grid-cols-2 gap-2" }, [
+    card.appendChild(el("div", { class: "mt-4 grid grid-cols-3 gap-2" }, [
+      el("button", {
+        class: "h-10 rounded-sm bg-surface2 text-mute t-meta",
+        onClick: () => openSwapPicker(ex, activeIdx)
+      }, ["Swap"]),
       el("button", {
         class: "h-10 rounded-sm bg-surface2 text-mute t-meta",
         onClick: () => {
           if (!confirm(`Skip ${ex.name}?`)) return;
           ex.skipped = true;
-          // mark remaining sets as not-counted by removing them
           ex.sets = ex.sets.filter(s => s.completed);
           saveState({ remote: false });
           activeIdx++;
           paint();
         }
-      }, ["Skip exercise →"]),
+      }, ["Skip →"]),
       el("button", {
         class: "h-10 rounded-sm bg-surface2 text-mute t-meta",
         onClick: () => { ex.sets.forEach(s => s.completed = true); saveState({remote:false}); paint(); }
-      }, ["Mark all done"])
+      }, ["Mark all"])
     ]));
 
     return card;
+  }
+
+  // Swap an active exercise for an alternate from the same category.
+  // Preserves any completed-set count; warns if there's progress to be lost.
+  function openSwapPicker(currentEx, idx) {
+    const completedCount = currentEx.sets.filter(s => s.completed).length;
+    if (completedCount > 0 && !confirm(`You've completed ${completedCount} ${completedCount === 1 ? "set" : "sets"} on ${currentEx.name}. Swapping will replace this exercise with a fresh one. Continue?`)) return;
+
+    // Find alternates: same category, eligible for current phase, equipment OK,
+    // not contraindicated, not already in today's plan.
+    const usedIdsToday = new Set((session.planned || []).map(p => p.exerciseId));
+    const phase = STATE.profile.phase;
+    const equip = new Set(STATE.profile.equipment);
+    const contras = new Set(STATE.profile.contraindications);
+    const disabled = new Set(STATE.profile.disabledTypes || []);
+    const alts = EXERCISES.filter(e =>
+      e.category === currentEx.category &&
+      e.id !== currentEx.exerciseId &&
+      !usedIdsToday.has(e.id) &&
+      e.phase_eligibility?.includes(phase) &&
+      e.equipment_required?.every(eq => equip.has(eq)) &&
+      !e.contraindication_tags?.some(t => contras.has(t)) &&
+      !(e.exercise_types || []).some(t => disabled.has(t))
+    ).slice(0, 8);
+
+    if (!alts.length) { alert("No alternate exercises available in this category."); return; }
+
+    const backdrop = el("div", {
+      class: "fixed inset-0 bg-black/60 z-40 flex items-end justify-center fadein",
+      onClick: (e) => { if (e.target === backdrop) backdrop.remove(); }
+    });
+    const sheet = el("div", {
+      class: "w-full max-w-md bg-card border-t border-hairline rounded-t-md p-5 max-h-[85vh] overflow-y-auto no-scrollbar",
+      style: { paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }
+    });
+    sheet.appendChild(el("div", { class: "flex items-start justify-between mb-3" }, [
+      el("div", {}, [
+        el("div", { class: "t-micro text-mute" }, [`Swap ${currentEx.name}`]),
+        el("h2", { class: "t-body text-ink mt-1" }, ["Pick an alternate"])
+      ]),
+      el("button", { class: "text-mute text-xl px-2", onClick: () => backdrop.remove() }, ["×"])
+    ]));
+    alts.forEach(alt => {
+      const item = el("button", {
+        class: "w-full text-left py-3 px-3 rounded-sm border border-hairline mb-2 hover:bg-surface2",
+        onClick: () => {
+          const repRange = alt.rep_ranges?.[`phase_${phase}`] || [8,12];
+          const sets = (currentEx.sets || []).length;
+          session.planned[idx] = {
+            ...currentEx,
+            exerciseId: alt.id, name: alt.name, category: alt.category,
+            sets: Array.from({ length: sets }, () => ({ reps: null, load: null, completed: false })),
+            repRange, prescribedLoad: null, prescribedNote: "Swapped",
+            rest_seconds: alt.rest_seconds,
+            isPhysio: alt.is_physio || false,
+            isWarmup: false,
+            cue: alt.cue || "",
+            modality: alt.modality || "reps",
+            unilateral: (alt.position_tags || []).includes("unilateral"),
+            videoUrl: alt.video_url || null,
+            videoSource: alt.video_source || null,
+            videoDurationSec: alt.video_duration_sec || null
+          };
+          saveState({ remote: false });
+          backdrop.remove();
+          paint();
+        }
+      }, [
+        el("div", { class: "t-body text-ink" }, [alt.name]),
+        el("div", { class: "t-meta text-mute mt-1 truncate" }, [alt.cue || ""])
+      ]);
+      sheet.appendChild(item);
+    });
+    backdrop.appendChild(sheet);
+    document.body.appendChild(backdrop);
   }
 
   function recoveryCard(session) {
@@ -1513,6 +1663,37 @@ function SettingsScreen() {
         class: "px-3 py-2 rounded-sm bg-danger/20 text-danger text-sm",
         onClick: () => { if (!confirm("Clear all your video picks?")) return; STATE.videoOverrides = {}; saveState(); render(); }
       }, ["Clear all"]) : null
+    ])
+  ]));
+
+  // Backup / restore — full state as JSON. Useful when switching devices
+  // or when Firestore sync is intentionally off.
+  wrap.appendChild(section("Backup", [
+    el("p", { class: "t-meta text-mute mb-3" }, ["Export all your data (profile, sessions, history, video picks) as a JSON blob. Paste it back on any device to restore."]),
+    el("div", { class: "flex gap-2" }, [
+      el("button", {
+        class: "flex-1 py-2 rounded-sm bg-surface2 t-meta",
+        onClick: async () => {
+          const blob = JSON.stringify(STATE, null, 2);
+          try { await navigator.clipboard.writeText(blob); alert("Backup copied to clipboard."); }
+          catch { prompt("Copy this JSON:", blob); }
+        }
+      }, ["Export to clipboard"]),
+      el("button", {
+        class: "flex-1 py-2 rounded-sm bg-surface2 t-meta",
+        onClick: () => {
+          const raw = prompt("Paste a Cadence backup JSON to restore:");
+          if (!raw) return;
+          try {
+            const parsed = JSON.parse(raw);
+            if (!parsed.profile) throw new Error("Missing profile");
+            if (!confirm("Replace all local data with this backup?")) return;
+            STATE = { ...DEFAULT_STATE(), ...parsed };
+            saveState(); render();
+            alert("Restored.");
+          } catch (e) { alert("Couldn't parse backup: " + e.message); }
+        }
+      }, ["Import"])
     ])
   ]));
 
