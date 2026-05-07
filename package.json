@@ -1,0 +1,12 @@
+{
+  "name": "cadence",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Today's training card. Calibrated to where you are.",
+  "scripts": {
+    "audit": "node scripts/audit-seed.js",
+    "smoke": "node scripts/smoke-test.js",
+    "plans": "node scripts/generate-sample-plans.js",
+    "test": "node scripts/audit-seed.js && node scripts/smoke-test.js"
+  }
+}
