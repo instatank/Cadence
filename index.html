@@ -186,6 +186,24 @@ const RECOVERY_BLOCK = [
 const DEFAULT_CONTRAINDICATIONS = ["right_anterior_shoulder", "right_medial_ankle"];
 const DEFAULT_EQUIPMENT = ["adjustable_dumbbells","barbell_plates","adjustable_bench","pull_up_bar","resistance_bands","cable_machine","foam_roller","yoga_mat","bodyweight"];
 
+// When a recipe slot can't be filled (often because contraindications wiped the
+// primary pool), draw from these related categories in order.
+const RELATED_CATEGORIES = {
+  horizontal_push: ["scap_postural", "core"],
+  vertical_push:   ["scap_postural"],
+  horizontal_pull: ["scap_postural"],
+  vertical_pull:   ["scap_postural"],
+  quad_dominant:   ["hinge_posterior", "calf_lower_leg"],
+  hinge_posterior: ["quad_dominant"],
+  arms_isolation:  ["scap_postural", "core"],
+  core:            ["physio_specific"],
+  recovery_mobility: ["mobility_movement", "yoga_asana"],
+  mobility_movement: ["recovery_mobility", "yoga_asana"],
+  yoga_asana:      ["recovery_mobility"],
+  scap_postural:   ["physio_specific"],
+  physio_specific: ["recovery_mobility"]
+};
+
 //-----------------------------------------------------------------------------
 // Storage (local mirror) + Firestore client
 //-----------------------------------------------------------------------------
@@ -232,7 +250,7 @@ async function loadExerciseSeed() {
 async function seedFirestoreIfNeeded(seed) {
   if (!fbReady) return;
   const meta = await getDoc(doc(fbDb, "system", "seed"));
-  if (meta.exists() && meta.data().version === "2.0") return;
+  if (meta.exists() && meta.data().version === "2.1") return;
   // Batch write all exercises
   const chunks = [];
   for (let i = 0; i < seed.length; i += 400) chunks.push(seed.slice(i, i + 400));
@@ -241,7 +259,7 @@ async function seedFirestoreIfNeeded(seed) {
     chunk.forEach(ex => batch.set(doc(fbDb, "exercises", ex.id), ex));
     await batch.commit();
   }
-  await setDoc(doc(fbDb, "system", "seed"), { version: "2.0", seededAt: serverTimestamp(), count: seed.length });
+  await setDoc(doc(fbDb, "system", "seed"), { version: "2.1", seededAt: serverTimestamp(), count: seed.length });
   console.info(`[Cadence] Seeded ${seed.length} exercises to Firestore.`);
 }
 
@@ -447,30 +465,47 @@ function generateSession(date = new Date()) {
   const planned = [];
   const usedIds = new Set();
 
-  for (const [category, count, opts] of recipe) {
-    const remaining = pool.filter(ex => !usedIds.has(ex.id));
-    const picks = selectFromCategory(remaining, category, count, opts);
-    for (const ex of picks) {
-      usedIds.add(ex.id);
-      const sets = setsForExercise(ex, cardType);
-      const rx = prescribeLoad(ex);
-      planned.push({
-        exerciseId: ex.id, name: ex.name, category: ex.category,
-        sets: Array.from({ length: sets }, () => ({ reps: null, load: rx.load, completed: false })),
-        repRange: rx.reps, prescribedLoad: rx.load, prescribedNote: rx.note,
-        rest_seconds: ex.rest_seconds, isPhysio: ex.is_physio || false, notes: ex.notes || "",
-        cue: ex.cue || "",
-        videoUrl: ex.video_url || null,
-        videoSource: ex.video_source || null,
-        videoDurationSec: ex.video_duration_sec || null
-      });
-    }
+  function pushPick(ex) {
+    usedIds.add(ex.id);
+    const sets = setsForExercise(ex, cardType);
+    const rx = prescribeLoad(ex);
+    const isUnilateral = (ex.position_tags || []).includes("unilateral");
+    planned.push({
+      exerciseId: ex.id, name: ex.name, category: ex.category,
+      sets: Array.from({ length: sets }, () => ({ reps: null, load: rx.load, completed: false })),
+      repRange: rx.reps, prescribedLoad: rx.load, prescribedNote: rx.note,
+      rest_seconds: ex.rest_seconds, isPhysio: ex.is_physio || false, notes: ex.notes || "",
+      cue: ex.cue || "",
+      modality: ex.modality || "reps",
+      unilateral: isUnilateral,
+      videoUrl: ex.video_url || null,
+      videoSource: ex.video_source || null,
+      videoDurationSec: ex.video_duration_sec || null
+    });
   }
 
-  // Mandatory recovery block (PRD §6) — Phase 0/1 resistance days
+  for (const [category, count, opts] of recipe) {
+    const remaining = pool.filter(ex => !usedIds.has(ex.id));
+    let picks = selectFromCategory(remaining, category, count, opts);
+    // Fallback: if not enough exercises in the primary category (often because
+    // contraindications wiped the pool), draw from related categories.
+    if (picks.length < count) {
+      const fallbacks = RELATED_CATEGORIES[category] || [];
+      for (const fb of fallbacks) {
+        if (picks.length >= count) break;
+        const fbRemaining = pool.filter(ex => !usedIds.has(ex.id) && !picks.find(p => p.id === ex.id));
+        const extra = selectFromCategory(fbRemaining, fb, count - picks.length, opts);
+        picks = picks.concat(extra);
+      }
+    }
+    for (const ex of picks) pushPick(ex);
+  }
+
+  // Recovery card already IS recovery — don't double-append the foam-roll/ice block.
+  // For resistance days in Phase 0/1, append the mandatory recovery block (PRD §6).
   const recovery = (STATE.profile.phase < 2 && meta.kind === "resistance")
     ? RECOVERY_BLOCK.map(b => ({ ...b, completed: false }))
-    : (cardType === "recovery" ? RECOVERY_BLOCK.map(b => ({ ...b, completed: false })) : []);
+    : [];
 
   return {
     id: sessionIdFor(date),
@@ -581,6 +616,25 @@ function appBar(title, opts = {}) {
 // Back-compat shim — old header() callers still work, but prefer appBar going forward.
 function header(title, rightBtn) {
   return appBar(title, { right: rightBtn || null });
+}
+
+// Display a planned block's prescription line — modality-aware.
+function prescriptionText(p) {
+  const mod = p.modality || "reps";
+  const [lo, hi] = p.repRange || [0,0];
+  const range = lo === hi ? `${lo}` : `${lo}–${hi}`;
+  const sideTag = p.unilateral ? " each side" : "";
+  if (mod === "time")   return `${range} sec${sideTag}`;
+  if (mod === "rounds") return `${range} rounds${sideTag}`;
+  return `${range} reps${sideTag}`;
+}
+
+function setsLabel(p) {
+  const mod = p.modality || "reps";
+  const sets = p.sets.length;
+  if (mod === "time")   return `${sets} × ${prescriptionText(p)}`;
+  if (mod === "rounds") return `${sets} × ${prescriptionText(p)}`;
+  return `${sets} × ${prescriptionText(p)}`;
 }
 
 // tone: null (default mute) | "warn" | "accent"
@@ -1028,7 +1082,7 @@ function openDayPreview(date) {
       list.appendChild(el("li", { class: "py-2 px-3 bg-surface rounded-sm border border-hairline" }, [
         el("div", { class: "flex justify-between items-baseline gap-2" }, [
           el("div", { class: "font-medium" }, [`${i+1}. ${p.name}`]),
-          el("div", { class: "text-xs text-mute whitespace-nowrap" }, [`${p.sets.length} × ${p.repRange.join("–")}`])
+          el("div", { class: "text-xs text-mute whitespace-nowrap" }, [setsLabel(p)])
         ]),
         p.cue ? el("div", { class: "text-xs text-mute mt-1" }, [p.cue]) : null
       ]));
@@ -1100,7 +1154,7 @@ function SessionScreen() {
           class: "py-2 px-3 bg-surface rounded-sm mb-1 text-sm flex justify-between"
         }, [
           el("span", {}, [`${activeIdx + 2 + i}. ${p.name}`]),
-          el("span", { class: "text-mute" }, [`${p.sets.length} × ${p.repRange.join("–")}`])
+          el("span", { class: "text-mute" }, [setsLabel(p)])
         ]))
       ]));
     }
@@ -1131,29 +1185,34 @@ function SessionScreen() {
 
       const setNum = el("span", { class: "t-meta num text-mute" }, [String(sIdx + 1)]);
 
+      const mod = ex.modality || "reps";
+      const unitLabel = mod === "time" ? "sec" : mod === "rounds" ? "rounds" : "reps";
+      const showLoad = mod === "reps" && !ex.isPhysio;
+      const sideTag = ex.unilateral ? " /side" : "";
+
       const repsCol = el("button", { class: "t-body num text-ink text-left", onClick: () => toggleExpand(sIdx) });
       if (set.reps != null) {
         repsCol.appendChild(document.createTextNode(String(set.reps)));
-        const u = el("span", { class: "t-meta text-mute ml-1" }, ["reps"]);
-        repsCol.appendChild(u);
+        repsCol.appendChild(el("span", { class: "t-meta text-mute ml-1" }, [unitLabel + sideTag]));
       } else {
         repsCol.appendChild(document.createTextNode(`${ex.repRange[0]}–${ex.repRange[1]}`));
-        const u = el("span", { class: "t-meta text-mute ml-1" }, ["reps"]);
-        repsCol.appendChild(u);
+        repsCol.appendChild(el("span", { class: "t-meta text-mute ml-1" }, [unitLabel + sideTag]));
       }
 
-      const loadCol = el("button", { class: "t-body num text-mute text-right", onClick: () => toggleExpand(sIdx) });
-      if (set.load != null) {
-        loadCol.appendChild(document.createTextNode(String(set.load)));
-        const u = el("span", { class: "t-meta text-mute ml-1" }, ["kg"]);
-        loadCol.appendChild(u);
+      row.appendChild(cb); row.appendChild(setNum); row.appendChild(repsCol);
+
+      if (showLoad) {
+        const loadCol = el("button", { class: "t-body num text-mute text-right", onClick: () => toggleExpand(sIdx) });
+        if (set.load != null) {
+          loadCol.appendChild(document.createTextNode(String(set.load)));
+        } else {
+          loadCol.appendChild(document.createTextNode("—"));
+        }
+        loadCol.appendChild(el("span", { class: "t-meta text-mute ml-1" }, ["kg"]));
+        row.appendChild(loadCol);
       } else {
-        loadCol.appendChild(document.createTextNode("—"));
-        const u = el("span", { class: "t-meta text-mute ml-1" }, ["kg"]);
-        loadCol.appendChild(u);
+        row.appendChild(el("span"));
       }
-
-      row.appendChild(cb); row.appendChild(setNum); row.appendChild(repsCol); row.appendChild(loadCol);
       card.appendChild(row);
 
       function toggleExpand(i) {

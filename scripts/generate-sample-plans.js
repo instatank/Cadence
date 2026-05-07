@@ -54,6 +54,22 @@ const RECOVERY_BLOCK = [
   { name: "Ice / contrast: shoulder + ankle", durationMin: 10 }
 ];
 
+const RELATED_CATEGORIES = {
+  horizontal_push: ["scap_postural", "core"],
+  vertical_push:   ["scap_postural"],
+  horizontal_pull: ["scap_postural"],
+  vertical_pull:   ["scap_postural"],
+  quad_dominant:   ["hinge_posterior", "calf_lower_leg"],
+  hinge_posterior: ["quad_dominant"],
+  arms_isolation:  ["scap_postural", "core"],
+  core:            ["physio_specific"],
+  recovery_mobility: ["mobility_movement", "yoga_asana"],
+  mobility_movement: ["recovery_mobility", "yoga_asana"],
+  yoga_asana:      ["recovery_mobility"],
+  scap_postural:   ["physio_specific"],
+  physio_specific: ["recovery_mobility"]
+};
+
 const DEFAULT_CONTRA = ["right_anterior_shoulder", "right_medial_ankle"];
 const DEFAULT_EQUIPMENT = new Set([
   "adjustable_dumbbells","barbell_plates","adjustable_bench","pull_up_bar",
@@ -114,22 +130,35 @@ function generateSession(phase, date, week) {
   const pool = filterPool(phase, cardType);
   const planned = [];
   const used = new Set();
+  function pushPick(ex) {
+    used.add(ex.id);
+    const sets = setsForExercise(ex, cardType, week);
+    const repRange = ex.rep_ranges?.[`phase_${phase}`] || [8,12];
+    const isUnilateral = (ex.position_tags || []).includes("unilateral");
+    planned.push({
+      id: ex.id, name: ex.name, category: ex.category, sets, repRange,
+      rest_seconds: ex.rest_seconds, cue: ex.cue || "", isPhysio: ex.is_physio,
+      modality: ex.modality || "reps", unilateral: isUnilateral
+    });
+  }
   for (const [cat, count, opts] of recipe) {
     const remaining = pool.filter(ex => !used.has(ex.id));
-    const picks = selectFromCategory(remaining, cat, count, opts);
-    for (const ex of picks) {
-      used.add(ex.id);
-      const sets = setsForExercise(ex, cardType, week);
-      const repRange = ex.rep_ranges?.[`phase_${phase}`] || [8,12];
-      planned.push({ id: ex.id, name: ex.name, category: ex.category, sets, repRange, rest_seconds: ex.rest_seconds, cue: ex.cue || "", isPhysio: ex.is_physio });
+    let picks = selectFromCategory(remaining, cat, count, opts);
+    if (picks.length < count) {
+      for (const fb of (RELATED_CATEGORIES[cat] || [])) {
+        if (picks.length >= count) break;
+        const fbRemaining = pool.filter(ex => !used.has(ex.id) && !picks.find(p => p.id === ex.id));
+        picks = picks.concat(selectFromCategory(fbRemaining, fb, count - picks.length, opts));
+      }
     }
+    for (const ex of picks) pushPick(ex);
   }
   // Track for rotation
   usedHistory[cardType] = (usedHistory[cardType] || []).concat([planned.map(p => p.id)]);
   if (usedHistory[cardType].length > 2) usedHistory[cardType] = usedHistory[cardType].slice(-2);
 
-  const recovery = (phase < 2 && meta.kind === "resistance") ? RECOVERY_BLOCK
-                  : (cardType === "recovery" ? RECOVERY_BLOCK : []);
+  // Recovery card already IS recovery — only resistance days get the appended block.
+  const recovery = (phase < 2 && meta.kind === "resistance") ? RECOVERY_BLOCK : [];
   return { date, dow, cardType, meta, planned, recovery };
 }
 
@@ -165,8 +194,11 @@ function runPhase(phase, label, weeksToShow) {
       // Title row spanning the day
       md.push(`| **${dayName(date.getDay())}** | **${session.meta.title}** *(~${session.meta.duration}m)* | | | |`);
       session.planned.forEach((p, i) => {
-        md.push(`| | | ${i+1}. ${p.name}${p.isPhysio ? " *(physio)*" : ""} | ${p.sets} × ${p.repRange[0]}–${p.repRange[1]} | ${p.rest_seconds}s |`);
-        csvRows.push([phase, week, dayName(date.getDay()), dateISO, session.meta.title, i+1, p.name, p.category, p.sets, `${p.repRange[0]}-${p.repRange[1]}`, p.rest_seconds, (p.cue || "").replace(/[\r\n]+/g," ")]);
+        const unit = p.modality === "time" ? "sec" : p.modality === "rounds" ? "rounds" : "reps";
+        const side = p.unilateral ? " /side" : "";
+        const prescription = `${p.sets} × ${p.repRange[0]}–${p.repRange[1]} ${unit}${side}`;
+        md.push(`| | | ${i+1}. ${p.name}${p.isPhysio ? " *(physio)*" : ""} | ${prescription} | ${p.rest_seconds}s |`);
+        csvRows.push([phase, week, dayName(date.getDay()), dateISO, session.meta.title, i+1, p.name, p.category, p.sets, `${p.repRange[0]}-${p.repRange[1]} ${unit}${side}`, p.rest_seconds, (p.cue || "").replace(/[\r\n]+/g," ")]);
       });
       session.recovery.forEach(r => {
         md.push(`| | | _${r.name}_ | ${r.durationMin} min | — |`);
