@@ -639,7 +639,13 @@ function el(tag, attrs = {}, children = []) {
     else if (k === "style" && typeof v === "object") Object.assign(n.style, v);
     else n.setAttribute(k, v);
   }
-  (Array.isArray(children) ? children : [children]).filter(Boolean).forEach(c => n.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+  // Flatten nested arrays so children can be inline-conditional groups.
+  const flat = (Array.isArray(children) ? children : [children]).flat(Infinity).filter(Boolean);
+  for (const c of flat) {
+    if (typeof c === "string" || typeof c === "number") n.appendChild(document.createTextNode(String(c)));
+    else if (c instanceof Node) n.appendChild(c);
+    // silently skip anything else (truthy non-string non-Node) to avoid crashing the whole render
+  }
   return n;
 }
 
