@@ -4,6 +4,9 @@ One human-readable line per meaningful change. Reverse chronological. See `git l
 
 ## 2026-05-08
 
+- **Bugfix:** UTC date bug fixed — every "today" check now uses local date via new `localISO()` helper. Previously after ~6:30pm IST, session ID and week-strip "today" highlight rolled to the next day because they used `toISOString()`. Caused Saturday evening to display as Sunday, broke rest-day matching, and ID-collision-blocked legitimate completions.
+- **Feature:** "Pick a workout" / "Change workout" — new bottom-sheet picker on Today lets you override the engine's scheduled card with any phase-eligible card type. Visible from off days, rest days, and active planned days. Stored as `STATE.todayOverride`; clearable.
+- **Feature:** "Do this today →" button in the day-preview sheet for any non-today day. Pulls that day's card type to today as an override, regenerates today's plan with it.
 - **Bugfix:** completed sessions now show a summary on Today (was silently re-rendering the Start CTA, making the workout feel "unsaved"). Adds an isCompleted branch with finished-time, sets logged, View summary button, and Re-open workout for accidental finishes.
 - **Bugfix:** SessionScreen redirects to Today when entered with a completed session — prevents the re-finalize loop where tapping Start on a completed day would either bounce immediately to Done or flicker through the recovery block.
 

@@ -288,7 +288,15 @@ async function seedFirestoreIfNeeded(seed) {
 // User state — single source of truth, persisted to LS, mirrored to Firestore
 //-----------------------------------------------------------------------------
 
-const todayISO = () => new Date().toISOString().slice(0,10);
+// Local-date ISO (YYYY-MM-DD). Critical: never use toISOString().slice(0,10)
+// for "today" — that returns UTC, which rolls a day early in IST/+5:30 etc.
+function localISO(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+const todayISO = () => localISO();
 
 const DEFAULT_STATE = () => ({
   setupDone: false,
@@ -304,6 +312,7 @@ const DEFAULT_STATE = () => ({
   mesocycle: { startDate: todayISO(), currentWeek: 1 }, // week 1..5; 5 = deload
   daySkew: 0, // increments on "Rest today" — shifts planned split forward
   restDays: [], // ISO dates the user has tagged as rest
+  todayOverride: null, // { date: ISO, cardType: "lower" } — manual override for today's plan
   sessions: {}, // sessionId → session record (also synced)
   exerciseHistory: {}, // exerciseId → { lastDate, lastLoad, lastReps, symptomFlagCount, lastCardType }
   videoOverrides: {}, // exerciseId → preferred YouTube URL (user override, syncs)
@@ -322,6 +331,7 @@ function saveState({ remote = true } = {}) {
       mesocycle: STATE.mesocycle,
       daySkew: STATE.daySkew,
       restDays: STATE.restDays || [],
+      todayOverride: STATE.todayOverride || null,
       setupDone: STATE.setupDone,
       exerciseHistory: STATE.exerciseHistory,
       videoOverrides: STATE.videoOverrides || {},
@@ -487,14 +497,20 @@ function prescribeLoad(ex) {
 // 5. Generate today's session
 function generateSession(date = new Date()) {
   refreshMesocycleWeek();
-  const iso = date.toISOString().slice(0,10);
+  const iso = localISO(date);
+  const isToday = iso === todayISO();
 
-  // User-tagged rest day overrides the engine's day-type lookup.
-  if (isRestDay(iso)) {
+  // Manual override (Today only): user picked a different card for today.
+  // Override beats rest-day and engine's day-type lookup.
+  let cardType;
+  if (isToday && STATE.todayOverride && STATE.todayOverride.date === iso) {
+    cardType = STATE.todayOverride.cardType;
+  } else if (isRestDay(iso)) {
     return { id: sessionIdFor(date), date: iso, cardType: "rest", planned: [], recovery: [], meta: CARD_META.rest };
+  } else {
+    cardType = dayCardType(date);
   }
 
-  const cardType = dayCardType(date);
   const meta = CARD_META[cardType];
   if (!meta || meta.kind === "off") {
     return { id: sessionIdFor(date), date: iso, cardType, planned: [], recovery: [], meta };
@@ -565,7 +581,7 @@ function generateSession(date = new Date()) {
 
   return {
     id: sessionIdFor(date),
-    date: date.toISOString().slice(0,10),
+    date: localISO(date),
     cardType, meta,
     deload: isDeloadWeek(),
     planned, recovery,
@@ -574,7 +590,7 @@ function generateSession(date = new Date()) {
   };
 }
 
-const sessionIdFor = (date) => "s_" + date.toISOString().slice(0,10);
+const sessionIdFor = (date) => "s_" + localISO(date);
 
 //-----------------------------------------------------------------------------
 // Router (hash-based)
@@ -939,6 +955,76 @@ function setVideoOverride(exerciseId, url) {
 // Today screen — PRD §7 Flow A
 //-----------------------------------------------------------------------------
 
+// Set today's card-type override and regenerate. Use null to clear.
+function setTodayCardType(cardType) {
+  const today = todayISO();
+  if (cardType) {
+    STATE.todayOverride = { date: today, cardType };
+    // If today was marked rest, removing it makes sense too.
+    STATE.restDays = (STATE.restDays || []).filter(d => d !== today);
+  } else {
+    STATE.todayOverride = null;
+  }
+  // Drop any cached session for today so the engine regenerates with the override.
+  delete STATE.sessions["s_" + today];
+  saveState();
+}
+
+// Bottom-sheet picker: choose a card type for today.
+// Includes both currently-eligible types (for the user's phase) and an "All" peek.
+function openTodayCardPicker() {
+  const phase = STATE.profile.phase;
+  // Card types available for the current phase (from DAY_TABLE)
+  const phaseCards = [...new Set(Object.values(DAY_TABLE[phase]))].filter(c => c !== "off");
+  // Plus other phase cards as "advanced" options (user might want a Phase 2 card mid-Phase 1)
+  const allCards = [...new Set([].concat(...Object.values(DAY_TABLE).map(d => Object.values(d))))]
+    .filter(c => c !== "off" && !phaseCards.includes(c));
+
+  const backdrop = el("div", {
+    class: "fixed inset-0 bg-black/60 z-40 flex items-end justify-center fadein",
+    onClick: (e) => { if (e.target === backdrop) backdrop.remove(); }
+  });
+  const sheet = el("div", {
+    class: "w-full max-w-md bg-card border-t border-hairline rounded-t-md p-5 max-h-[85vh] overflow-y-auto no-scrollbar",
+    style: { paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }
+  });
+  sheet.appendChild(el("div", { class: "flex items-start justify-between mb-3" }, [
+    el("div", {}, [
+      el("div", { class: "t-micro text-mute" }, ["Choose today's workout"]),
+      el("h2", { class: "t-body text-ink mt-1" }, [`${PHASES[phase].short} cards`])
+    ]),
+    el("button", { class: "text-mute text-xl px-2", onClick: () => backdrop.remove() }, ["×"])
+  ]));
+
+  function row(c) {
+    const meta = CARD_META[c];
+    return el("button", {
+      class: "w-full text-left py-3 px-3 rounded-sm border border-hairline mb-2 hover:bg-surface2 flex justify-between items-center",
+      onClick: () => { setTodayCardType(c); backdrop.remove(); render(); }
+    }, [
+      el("div", {}, [
+        el("div", { class: "t-body text-ink" }, [meta.title]),
+        el("div", { class: "t-meta text-mute" }, [`~${meta.duration} min · ${meta.kind}`])
+      ]),
+      el("span", { class: "t-meta text-mute" }, ["→"])
+    ]);
+  }
+  phaseCards.forEach(c => sheet.appendChild(row(c)));
+  if (allCards.length) {
+    sheet.appendChild(el("div", { class: "t-micro text-mute mt-3 mb-2" }, ["Other phases"]));
+    allCards.forEach(c => sheet.appendChild(row(c)));
+  }
+  if (STATE.todayOverride) {
+    sheet.appendChild(el("button", {
+      class: "w-full mt-3 py-2 text-mute t-meta",
+      onClick: () => { setTodayCardType(null); backdrop.remove(); render(); }
+    }, ["Clear override · use scheduled card"]));
+  }
+
+  backdrop.appendChild(sheet);
+  document.body.appendChild(backdrop);
+}
+
 function todaySession() {
   const id = sessionIdFor(new Date());
   if (STATE.sessions[id]) return STATE.sessions[id];
@@ -1022,7 +1108,11 @@ function TodayScreen() {
       ])
     ]));
     card.appendChild(el("button", {
-      class: "w-full mt-5 h-12 rounded-sm bg-surface2 text-mute t-meta",
+      class: "w-full mt-5 h-14 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight active:scale-[.985] active:opacity-90 transition",
+      onClick: openTodayCardPicker
+    }, ["Pick a workout instead"]));
+    card.appendChild(el("button", {
+      class: "w-full mt-2 py-2 text-mute t-meta",
       onClick: () => {
         STATE.restDays = (STATE.restDays || []).filter(d => d !== todayKey);
         STATE.daySkew = Math.max(0, (STATE.daySkew || 0) - 1);
@@ -1034,13 +1124,19 @@ function TodayScreen() {
     card.appendChild(el("div", { class: "space-y-3" }, [
       el("div", { class: "t-meta text-mute" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
       el("h2", { class: "t-display text-ink" }, ["Off Day"]),
-      el("p", { class: "t-meta text-mute" }, ["Recover. Tomorrow's card is ready when you are."])
+      el("p", { class: "t-meta text-mute" }, ["Scheduled rest. Tap below if you'd like to do a workout anyway."])
     ]));
+    card.appendChild(el("button", {
+      class: "w-full mt-5 h-14 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight active:scale-[.985] active:opacity-90 transition",
+      onClick: openTodayCardPicker
+    }, ["Pick a workout"]));
   } else {
+    const overrideActive = STATE.todayOverride && STATE.todayOverride.date === todayKey;
     card.appendChild(el("div", { class: "space-y-2" }, [
-      el("div", { class: "flex items-center gap-2" }, [
+      el("div", { class: "flex items-center gap-2 flex-wrap" }, [
         el("span", { class: "t-meta text-mute" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
-        session.deload ? pill("Deload week", "warn") : null
+        session.deload ? pill("Deload week", "warn") : null,
+        overrideActive ? pill("Custom pick", "accent") : null
       ]),
       el("h2", { class: "t-display text-ink" }, [meta.title]),
       el("div", { class: "t-meta text-mute" }, [
@@ -1061,17 +1157,24 @@ function TodayScreen() {
       onClick: () => { session.startedAt = Date.now(); STATE.sessions[session.id] = session; saveState(); navigate("session"); }
     }, [session.startedAt && !session.completedAt ? "Resume" : "Start workout"]));
 
-    card.appendChild(el("button", {
-      class: "w-full mt-2 py-2 text-mute t-meta",
-      onClick: () => {
-        if (session.startedAt && !session.completedAt) { alert("You've already started today's session. Finish or pause first."); return; }
-        if (!confirm("Mark today as a rest day?\n\nToday's plan carries forward to tomorrow.")) return;
-        STATE.restDays = [...(STATE.restDays || []), todayKey];
-        STATE.daySkew = (STATE.daySkew || 0) + 1;
-        delete STATE.sessions[session.id];
-        saveState(); render();
-      }
-    }, ["Rest today → carry plan forward"]));
+    card.appendChild(el("div", { class: "grid grid-cols-2 gap-2 mt-2" }, [
+      el("button", {
+        class: "py-2 text-mute t-meta",
+        onClick: openTodayCardPicker
+      }, ["Change workout"]),
+      el("button", {
+        class: "py-2 text-mute t-meta",
+        onClick: () => {
+          if (session.startedAt && !session.completedAt) { alert("You've already started today's session. Finish or pause first."); return; }
+          if (!confirm("Mark today as a rest day?\n\nToday's plan carries forward to tomorrow.")) return;
+          STATE.restDays = [...(STATE.restDays || []), todayKey];
+          STATE.daySkew = (STATE.daySkew || 0) + 1;
+          STATE.todayOverride = null;
+          delete STATE.sessions[session.id];
+          saveState(); render();
+        }
+      }, ["Rest today →"])
+    ]));
   }
   wrap.appendChild(card);
 
@@ -1128,7 +1231,7 @@ function weekStrip() {
 
   const row = el("div", { class: "grid grid-cols-7 gap-1" });
   days.forEach(d => {
-    const iso = d.toISOString().slice(0,10);
+    const iso = localISO(d);
     const isToday = iso === todayKey;
     const session = STATE.sessions["s_" + iso];
     const preview = generateSession(d);
@@ -1206,11 +1309,24 @@ function openDayPreview(date) {
       ]));
     }
 
-    const isToday = date.toISOString().slice(0,10) === todayISO();
-    sheet.appendChild(el("button", {
-      class: `w-full mt-5 py-3 rounded-md ${isToday ? "bg-accent text-accentInk font-medium" : "bg-surface2 text-mute"}`,
-      onClick: () => { backdrop.remove(); if (isToday) navigate("today"); }
-    }, [isToday ? "Go to today" : "Close"]));
+    const isToday = localISO(date) === todayISO();
+    if (isToday) {
+      sheet.appendChild(el("button", {
+        class: "w-full mt-5 py-3 rounded-md bg-accent text-accentInk font-medium",
+        onClick: () => { backdrop.remove(); navigate("today"); }
+      }, ["Go to today"]));
+    } else {
+      // Allow "Do this workout today" for any day's preview — pulls that day's
+      // card type to today as an override.
+      sheet.appendChild(el("button", {
+        class: "w-full mt-5 h-12 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight",
+        onClick: () => { setTodayCardType(preview.cardType); backdrop.remove(); navigate("today"); }
+      }, [`Do this today → ${preview.meta?.title || preview.cardType}`]));
+      sheet.appendChild(el("button", {
+        class: "w-full mt-2 py-2 text-mute t-meta",
+        onClick: () => backdrop.remove()
+      }, ["Close"]));
+    }
   }
 
   backdrop.appendChild(sheet);
@@ -1604,7 +1720,7 @@ function SettingsScreen() {
       el("button", { class: "flex-1 py-2 rounded-sm bg-surface2 text-sm", onClick: () => {
         const target = isDeloadWeek() ? 1 : 5;
         const offsetDays = (target - 1) * 7;
-        STATE.mesocycle.startDate = new Date(Date.now() - offsetDays * 86400000).toISOString().slice(0,10);
+        STATE.mesocycle.startDate = localISO(new Date(Date.now() - offsetDays * 86400000));
         STATE.mesocycle.currentWeek = target;
         delete STATE.sessions[sessionIdFor(new Date())];
         saveState(); render();
