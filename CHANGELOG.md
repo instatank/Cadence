@@ -4,6 +4,8 @@ One human-readable line per meaningful change. Reverse chronological. See `git l
 
 ## 2026-05-08
 
+- **Logo + bumped wordmark in Today header:** inline accent-colored heartbeat glyph (same motif as `icon.svg`, 22×22 px) sits next to the wordmark. "Cadence" wordmark size: 17px t-body → 20px semibold with -0.02em letter-spacing for a more brand-forward feel.
+- **PRD §14b "Design intent" added:** explicitly establishes Cadence as a consumer-grade app, not an instrument panel. Rejects the prior "Garmin / hospital chart" framing as canonical override for any future design contributor. Keeps the §3 non-goals (no streaks, gamification, decorative effects) intact.
 - **Today header redesign:** three-anchor layout — "Cadence" wordmark left · `Wk N/5 · Day D` mesocycle indicator centered (numerics in tabular .num) · settings cog right. Replaces the previous "Today" + "Phase 0" subtitle. Phase pill stays where it was on the workout card (single source of truth).
 - **Week-strip dot states (3-state):** filled accent for DONE, outlined accent for SCHEDULED (planned but not done — including past), hairline-bordered hollow for REST/OFF. Diameter bumped 6px → 8px so filled vs outlined is legible. Today's surrounding box unchanged.
 - **Custom-pick pill is its own inverse:** when an override is active, the pill becomes a button with an inline ×. Tap anywhere on it to clear `STATE.todayOverride` and revert to the engine's scheduled card.

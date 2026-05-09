@@ -311,6 +311,25 @@ Mirrors DayOS — no new pattern to learn.
 
 ---
 
+## 14b. Design intent
+
+This is a **consumer-grade app**, not an instrument panel. Even though it's a single-user tool, it should look and feel polished, branded, and inviting — closer to a well-designed consumer fitness app than to a clinical chart or pure utility UI.
+
+Concretely:
+- A logo + wordmark in the header is part of the identity. Don't strip it for "minimalism."
+- Type can be expressive at hierarchy moments (the workout title, the Done summary). Not every label needs to be t-meta uppercase.
+- The accent color is allowed to carry visual weight, not just signal state.
+- Spacing, hierarchy, and small moments of polish (a logo glyph, a soft background card) are good — they don't violate the <2-second-to-action promise as long as the primary CTA is unambiguous.
+
+What this **doesn't** mean:
+- Still no streaks, badges, gamification, leaderboards, or social — those are out per §3 non-goals.
+- Still no decorative gradients, glassmorphism, or layered effects without information value.
+- Still no animations beyond functional feedback (set-check pulse, card-advance).
+
+The previous "Garmin watch face / hospital chart" direction was rejected. If a future contributor brings that framing in, this section is the canonical override.
+
+---
+
 ## 15. Success metrics
 
 | Metric | Target | Why |
