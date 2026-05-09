@@ -1080,21 +1080,43 @@ function TodayScreen() {
     }
 
     card.appendChild(el("button", {
-      class: "w-full mt-5 h-12 rounded-sm bg-surface2 text-mute t-meta",
+      class: "w-full mt-5 h-12 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight active:scale-[.985] active:opacity-90 transition",
       onClick: () => navigate("done", { _id: session.id })
     }, ["View summary"]));
 
-    card.appendChild(el("button", {
-      class: "w-full mt-2 py-2 text-mute t-meta",
-      onClick: () => {
-        if (!confirm("Re-open today's workout? You'll be able to add or change sets.")) return;
-        delete session.completedAt;
-        delete session.durationActual;
-        // Don't touch sessionSymptomFlag — the answer is still valid history.
-        STATE.sessions[session.id] = session;
-        saveState(); navigate("session");
-      }
-    }, ["Re-open workout"]));
+    card.appendChild(el("div", { class: "grid grid-cols-2 gap-2 mt-2" }, [
+      el("button", {
+        class: "py-2 text-mute t-meta",
+        onClick: () => {
+          // Edit-mode: keeps every logged value, lets user correct kg/reps,
+          // explicitly skips re-finalize until they hit "Done editing".
+          session.editing = true;
+          delete session.completedAt;
+          delete session.durationActual;
+          STATE.sessions[session.id] = session;
+          saveState(); navigate("session");
+        }
+      }, ["Edit logged sets"]),
+      el("button", {
+        class: "py-2 text-mute t-meta",
+        onClick: () => {
+          if (!confirm("Reset today's workout?\n\nAll completed sets and logged values will be cleared. You'll start the same workout from the beginning.")) return;
+          (session.planned || []).forEach(p => {
+            (p.sets || []).forEach(s => { s.completed = false; s.reps = null; s.load = null; });
+            delete p.symptomFlag;
+            delete p.skipped;
+          });
+          (session.recovery || []).forEach(r => { r.completed = false; });
+          delete session.completedAt;
+          delete session.durationActual;
+          delete session.startedAt;
+          delete session.sessionSymptomFlag;
+          delete session.editing;
+          STATE.sessions[session.id] = session;
+          saveState(); navigate("today");
+        }
+      }, ["Reset workout"])
+    ]));
   } else if (isRest) {
     const tomorrow = new Date(Date.now() + 86400000);
     const tomPlan = generateSession(tomorrow);
@@ -1341,9 +1363,14 @@ function SessionScreen() {
   const wrap = el("div");
   const session = STATE.sessions[sessionIdFor(new Date())] || todaySession();
   if (!session.planned?.length && !session.recovery?.length) { navigate("today"); return wrap; }
-  // Completed session → bounce back to Today so the user sees the summary card,
-  // not a re-finalize loop.
-  if (session.completedAt) { navigate("today"); return wrap; }
+  // Completed session AND not in edit mode → bounce back to Today so the user
+  // sees the summary card, not a re-finalize loop.
+  if (session.completedAt && !session.editing) { navigate("today"); return wrap; }
+
+  // Edit mode: render every exercise as a static editable stack. No
+  // auto-advance, no auto-finalize, no Done navigation. User taps "Done editing"
+  // to return to Today (which restamps completedAt if it was previously set).
+  if (session.editing) return EditModeScreen(wrap, session);
 
   let activeIdx = session.planned.findIndex(p => p.sets.some(s => !s.completed));
   if (activeIdx === -1) activeIdx = session.planned.length; // recovery phase
@@ -1662,29 +1689,221 @@ function finalize(session) {
   syncSession(session);
 }
 
+// Edit mode: full-session editor for a previously-finalized workout.
+// Every exercise renders as a static card with editable kg/reps. No
+// auto-advance, no auto-finalize. "Done editing" re-stamps completedAt
+// and returns the user to Today.
+function EditModeScreen(wrap, session) {
+  function paint() {
+    wrap.innerHTML = "";
+    const exit = () => {
+      // Re-stamp completedAt when leaving edit mode so the session is once
+      // again "completed" (the user may have just been correcting numbers).
+      session.editing = false;
+      session.completedAt = session.completedAt || Date.now();
+      session.durationActual = session.durationActual || null;
+      // Refresh exerciseHistory with the corrected values.
+      for (const p of session.planned || []) {
+        const completedSets = (p.sets || []).filter(s => s.completed);
+        if (!completedSets.length) continue;
+        const lastSet = completedSets[completedSets.length - 1];
+        const prev = STATE.exerciseHistory[p.exerciseId] || { symptomFlagCount: 0 };
+        STATE.exerciseHistory[p.exerciseId] = {
+          ...prev,
+          lastDate: session.date,
+          lastLoad: lastSet.load ?? prev.lastLoad ?? null,
+          lastReps: lastSet.reps ?? prev.lastReps ?? null,
+          lastCardType: session.cardType
+        };
+      }
+      saveState(); syncSession(session); navigate("today");
+    };
+
+    wrap.appendChild(appBar("Edit logged sets", {
+      subtitle: session.meta?.title || session.cardType,
+      back: exit,
+      home: exit
+    }));
+
+    wrap.appendChild(el("p", { class: "t-meta text-mute mb-4" }, [
+      "Tap any set to expand and correct kg or reps. Toggling the checkbox marks/unmarks. Changes save automatically."
+    ]));
+
+    (session.planned || []).forEach((ex, idx) => {
+      const card = el("section", { class: "bg-surface border border-hairline rounded-md p-5 mb-3" });
+      card.appendChild(el("div", { class: "flex items-start justify-between mb-2 gap-2" }, [
+        el("div", { class: "min-w-0" }, [
+          el("div", { class: "t-micro text-mute" }, [`Exercise ${idx + 1}`]),
+          el("h2", { class: "t-body text-ink" }, [ex.name])
+        ]),
+        ex.isWarmup ? pill("Warmup") : ex.isPhysio ? pill("Physio", "accent") : null
+      ]));
+
+      ex.sets.forEach((set, sIdx) => {
+        const mod = ex.modality || "reps";
+        const unitLabel = mod === "time" ? "sec" : mod === "rounds" ? "rounds" : "reps";
+        const showLoad = mod === "reps" && !ex.isPhysio;
+
+        const row = el("div", { class: "grid grid-cols-[32px_28px_1fr_auto] items-center gap-3", style: { height: "44px" } });
+        row.appendChild(el("button", {
+          class: `check w-[24px] h-[24px] rounded-full border-[1.5px] ${set.completed ? "bg-ok border-ok" : "border-dim"}`,
+          onClick: () => { set.completed = !set.completed; saveState({ remote: false }); paint(); }
+        }, [set.completed ? el("span", { class: "text-accentInk text-xs", style: { lineHeight: "0" } }, ["✓"]) : ""]));
+        row.appendChild(el("span", { class: "t-meta num text-mute" }, [String(sIdx + 1)]));
+
+        const repsBtn = el("button", { class: "t-body num text-ink text-left", onClick: () => toggleEditor(card, ex, set, sIdx) });
+        const repsVal = set.reps != null ? String(set.reps) : `${ex.repRange[0]}–${ex.repRange[1]}`;
+        repsBtn.appendChild(document.createTextNode(repsVal));
+        repsBtn.appendChild(el("span", { class: "t-meta text-mute ml-1" }, [unitLabel]));
+        row.appendChild(repsBtn);
+
+        if (showLoad) {
+          const loadBtn = el("button", { class: "t-body num text-mute text-right", onClick: () => toggleEditor(card, ex, set, sIdx) });
+          loadBtn.appendChild(document.createTextNode(set.load != null ? String(set.load) : "—"));
+          loadBtn.appendChild(el("span", { class: "t-meta text-mute ml-1" }, ["kg"]));
+          row.appendChild(loadBtn);
+        } else { row.appendChild(el("span")); }
+        card.appendChild(row);
+      });
+      wrap.appendChild(card);
+    });
+
+    wrap.appendChild(el("button", {
+      class: "w-full mt-2 mb-8 h-12 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight active:scale-[.985] active:opacity-90 transition",
+      onClick: exit
+    }, ["Done editing"]));
+  }
+
+  function toggleEditor(card, ex, set, sIdx) {
+    const existing = card.querySelector(`[data-edit="${sIdx}"]`);
+    if (existing) { existing.remove(); return; }
+    const editor = el("div", { "data-edit": String(sIdx), class: "ml-9 mb-2 flex gap-2" });
+    const repsInput = el("input", {
+      type: "number", inputmode: "decimal",
+      class: "num text-ink text-[17px] font-medium bg-surface2 rounded-sm w-full px-3 py-2 outline-none",
+      value: set.reps ?? "",
+      placeholder: `${ex.repRange[0]}–${ex.repRange[1]} ${ex.modality === "time" ? "sec" : ex.modality === "rounds" ? "rounds" : "reps"}`
+    });
+    repsInput.addEventListener("input", e => { set.reps = e.target.value === "" ? null : parseFloat(e.target.value); saveState({ remote: false }); });
+    editor.appendChild(repsInput);
+
+    if ((ex.modality || "reps") === "reps" && !ex.isPhysio) {
+      const loadInput = el("input", {
+        type: "number", inputmode: "decimal",
+        class: "num text-ink text-[17px] font-medium bg-surface2 rounded-sm w-full px-3 py-2 outline-none",
+        value: set.load ?? "",
+        placeholder: "kg"
+      });
+      loadInput.addEventListener("input", e => { set.load = e.target.value === "" ? null : parseFloat(e.target.value); saveState({ remote: false }); });
+      editor.appendChild(loadInput);
+    }
+    // Insert after the row that triggered it
+    const rows = Array.from(card.querySelectorAll("div.grid"));
+    const targetRow = rows[sIdx];
+    if (targetRow) targetRow.after(editor);
+  }
+
+  paint();
+  return wrap;
+}
+
 function DoneScreen() {
   const wrap = el("div");
   const session = STATE.sessions[currentRoute().id] || STATE.sessions[sessionIdFor(new Date())];
   wrap.appendChild(appBar("Done", { back: () => navigate("today") }));
 
-  wrap.appendChild(el("section", { class: "bg-card border border-hairline rounded-md p-6 text-center" }, [
-    el("div", { class: "text-5xl mb-3" }, ["✓"]),
-    el("h2", { class: "text-2xl font-semibold" }, [session?.meta?.title || "Session"]),
-    el("div", { class: "text-mute text-sm mt-1" }, [
-      session?.durationActual ? `${session.durationActual} min` : ""
-    ])
-  ]));
+  if (!session) {
+    wrap.appendChild(el("p", { class: "t-meta text-mute" }, ["No session found."]));
+    return wrap;
+  }
 
-  if (session && session.sessionSymptomFlag == null) {
-    wrap.appendChild(el("section", { class: "mt-6" }, [
-      el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Any pain today?"]),
+  // ─── Header with key totals ─────────────────────────────────────────────
+  const completedSetCount = (session.planned || []).reduce(
+    (n, p) => n + (p.sets || []).filter(s => s.completed).length, 0
+  );
+  const totalReps = (session.planned || []).reduce(
+    (n, p) => n + (p.sets || []).filter(s => s.completed).reduce((r, s) => r + (s.reps || 0), 0), 0
+  );
+  const totalVolume = (session.planned || []).reduce(
+    (n, p) => n + (p.sets || []).filter(s => s.completed && s.load != null && s.reps != null)
+      .reduce((v, s) => v + s.load * s.reps, 0), 0
+  );
+  const finishedAt = session.completedAt
+    ? new Date(session.completedAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+    : null;
+
+  const header = el("section", { class: "bg-surface border border-hairline rounded-md p-5 mb-4" });
+  header.appendChild(el("div", { class: "flex items-center gap-2 mb-2 flex-wrap" }, [
+    pill("Done", "accent"),
+    session.sessionSymptomFlag === true ? pill("Pain flagged", "warn") : null
+  ]));
+  header.appendChild(el("h2", { class: "t-display text-ink mb-1" }, [session.meta?.title || "Session"]));
+  header.appendChild(el("div", { class: "t-meta text-mute" }, [
+    session.durationActual ? [el("span", { class: "num" }, [String(session.durationActual)]), " min · "] : "",
+    el("span", { class: "num" }, [String(completedSetCount)]), " sets · ",
+    el("span", { class: "num" }, [String(totalReps)]), " reps",
+    totalVolume > 0 ? [" · ", el("span", { class: "num" }, [Math.round(totalVolume).toString()]), " kg total volume"] : "",
+    finishedAt ? ` · finished ${finishedAt}` : ""
+  ].filter(Boolean)));
+  wrap.appendChild(header);
+
+  // ─── Per-exercise breakdown ─────────────────────────────────────────────
+  const list = el("section", { class: "bg-card border border-hairline rounded-md p-4 mb-4" });
+  list.appendChild(el("h3", { class: "t-micro text-mute mb-3" }, ["What you did"]));
+  (session.planned || []).forEach((p, i) => {
+    const completed = (p.sets || []).filter(s => s.completed);
+    if (!completed.length && !p.skipped) return;
+    const row = el("div", { class: "py-2 border-b border-hairline last:border-0" });
+    row.appendChild(el("div", { class: "flex items-center justify-between gap-2 flex-wrap" }, [
+      el("div", { class: "t-body text-ink min-w-0 truncate" }, [
+        `${i + 1}. ${p.name}`,
+        p.symptomFlag ? el("span", { class: "ml-2 t-meta text-warn" }, ["⚠"]) : null,
+        p.isWarmup ? el("span", { class: "ml-2 t-meta text-mute" }, ["· warmup"]) : null
+      ]),
+      p.skipped
+        ? el("span", { class: "t-meta text-mute" }, ["skipped"])
+        : el("span", { class: "t-meta num text-mute" }, [
+            `${completed.length}/${p.sets.length} sets`
+          ])
+    ]));
+    if (!p.skipped && completed.length) {
+      const detail = completed.map(s => {
+        const reps = s.reps != null ? s.reps : "—";
+        if (p.modality === "time") return `${reps}s`;
+        if (p.modality === "rounds") return `${reps}r`;
+        const load = s.load != null ? `@${s.load}kg` : "";
+        return `${reps}${load}`;
+      }).join(" · ");
+      row.appendChild(el("div", { class: "t-meta num text-mute mt-1 truncate" }, [detail]));
+    }
+    list.appendChild(row);
+  });
+
+  // Recovery block summary (Phase 0/1 resistance days)
+  if (session.recovery?.length) {
+    const recDone = session.recovery.filter(r => r.completed).length;
+    list.appendChild(el("div", { class: "py-2 border-t border-hairline mt-1" }, [
+      el("div", { class: "t-meta text-mute" }, [
+        `Recovery block: ${recDone}/${session.recovery.length} blocks completed`
+      ])
+    ]));
+  }
+  wrap.appendChild(list);
+
+  // ─── Pain prompt OR primary actions ─────────────────────────────────────
+  if (session.sessionSymptomFlag == null) {
+    wrap.appendChild(el("section", { class: "mt-2" }, [
+      el("h3", { class: "t-micro text-mute mb-2" }, ["Any pain today?"]),
       el("div", { class: "flex gap-2" }, [
-        el("button", { class: "flex-1 py-3 rounded-md bg-surface2", onClick: () => { session.sessionSymptomFlag = false; saveState(); syncSession(session); render(); } }, ["No"]),
-        el("button", { class: "flex-1 py-3 rounded-md text-warn", onClick: () => { session.sessionSymptomFlag = true; saveState(); syncSession(session); render(); } }, ["Yes"])
+        el("button", { class: "flex-1 h-12 rounded-sm bg-surface2 text-ink t-body", onClick: () => { session.sessionSymptomFlag = false; saveState(); syncSession(session); render(); } }, ["No"]),
+        el("button", { class: "flex-1 h-12 rounded-sm bg-warn/10 text-warn t-body border border-warn", onClick: () => { session.sessionSymptomFlag = true; saveState(); syncSession(session); render(); } }, ["Yes"])
       ])
     ]));
   } else {
-    wrap.appendChild(el("button", { class: "w-full mt-6 h-12 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight active:scale-[.985] active:opacity-90 transition", onClick: () => navigate("today") }, ["Finish"]));
+    wrap.appendChild(el("button", {
+      class: "w-full mt-2 h-12 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight active:scale-[.985] active:opacity-90 transition",
+      onClick: () => navigate("today")
+    }, ["Finish"]));
   }
   return wrap;
 }
