@@ -1398,6 +1398,28 @@ function SessionScreen() {
       el("div", { class: "h-full bg-accent", style: { width: `${(doneCount/total)*100}%` } })
     ]));
 
+    // Completed list (above the active card) — pills for everything finished or skipped.
+    const completedExercises = session.planned.slice(0, activeIdx);
+    if (completedExercises.length) {
+      const setsDone = (p) => (p.sets || []).filter(s => s.completed).length;
+      wrap.appendChild(el("div", { class: "mb-4" }, [
+        el("h3", { class: "t-micro text-mute mb-2" }, [`Completed · ${completedExercises.length}`]),
+        el("div", { class: "flex flex-wrap gap-1.5" }, completedExercises.map((p, i) => {
+          const skipped = !!p.skipped;
+          const pillCls = skipped
+            ? "inline-flex items-center gap-1.5 py-1 pl-1.5 pr-2.5 rounded-sm bg-surface2 text-mute t-meta"
+            : "inline-flex items-center gap-1.5 py-1 pl-1.5 pr-2.5 rounded-sm bg-ok/10 text-ok t-meta border border-ok/30";
+          const mark = skipped ? "↷" : "✓";
+          return el("span", { class: pillCls, title: setsLabel(p) }, [
+            el("span", { class: "num text-[11px]" }, [String(i + 1)]),
+            el("span", { class: "font-semibold" }, [mark]),
+            el("span", { class: "text-ink truncate max-w-[10rem]" }, [p.name]),
+            !skipped ? el("span", { class: "num text-mute text-[11px]" }, [`${setsDone(p)}/${p.sets.length}`]) : null
+          ]);
+        }))
+      ]));
+    }
+
     if (activeIdx < session.planned.length) {
       const ex = session.planned[activeIdx];
       wrap.appendChild(exerciseCard(ex, activeIdx));

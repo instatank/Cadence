@@ -4,6 +4,8 @@ One human-readable line per meaningful change. Reverse chronological. See `git l
 
 ## 2026-05-08
 
+- **Completed list on In-Progress screen:** finished and skipped exercises now render as small pills above the active card, mirroring the "Up next" list below. Each pill shows the exercise number, a check (or skip arrow), name, and sets-completed count. Skipped exercises render in mute; completed in ok/green. Helps see progress visually during the session.
+- **Hardened el() helper:** flattens nested array children with `.flat(Infinity)` and only appends string/number/Node values. Prevents one bad inline-conditional child from blanking the whole screen (which is what caused the empty Done summary in the previous build).
 - **Done screen redesign:** the post-workout summary now shows a per-exercise breakdown (sets completed, reps × kg per set, total volume in kg, finish time, pain flag), not just a checkmark and title. Recovery block completion count surfaced.
 - **"Re-open workout" replaced** with two distinct actions on Today's completed-state card: **Edit logged sets** (opens an editor stack where every exercise's kg/reps can be corrected; saves auto; restamps `completedAt` on exit) and **Reset workout** (wipes all completion flags, logged values, symptom flags, and lets you redo the same workout from set 1). Previously "Re-open" cleared `completedAt` but immediately re-finalized since all sets were still done — bouncing right back to Done with no chance to edit anything.
 - New `EditModeScreen` renders all exercises as a static editable stack, no auto-advance / auto-finalize / Done-routing.
