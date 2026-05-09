@@ -1998,13 +1998,19 @@ function openSheet(opts) {
     class: "w-full max-w-md bg-card border-t border-hairline rounded-t-md p-5 max-h-[85vh] overflow-y-auto no-scrollbar",
     style: { paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }
   });
-  function close() { backdrop.remove(); opts.onClose && opts.onClose(); }
+  // canClose() returning false aborts the close (used by chip-multi pickers
+  // to confirm discard of unsaved changes). Force-close skips the guard.
+  function close({ force = false } = {}) {
+    if (!force && opts.canClose && !opts.canClose()) return;
+    backdrop.remove();
+    opts.onClose && opts.onClose();
+  }
   const head = el("div", { class: "flex items-start justify-between mb-3 gap-2" }, [
     el("div", { class: "min-w-0" }, [
       opts.subtitle ? el("div", { class: "t-micro text-mute" }, [opts.subtitle]) : null,
       el("h2", { class: "t-body text-ink mt-1 truncate" }, [opts.title])
     ]),
-    el("button", { class: "text-mute text-xl px-2 -mt-1", onClick: close }, ["×"])
+    el("button", { class: "text-mute text-xl px-2 -mt-1", onClick: () => close() }, ["×"])
   ]);
   sheet.appendChild(head);
   if (opts.body) sheet.appendChild(opts.body);
@@ -2047,10 +2053,10 @@ function settingsGroup({ title, rows, helper }) {
   ]);
 }
 
-// chipSelectAuto — like chipSelect but persists every toggle immediately.
-// Returns the row element. The onChange callback receives the current Set
-// after each toggle so the caller can saveState + invalidate cached sessions.
-function chipSelectAuto(options, set, labelFn, onChange) {
+// chipSelectStaged — toggle-only (no persistence). The caller commits the
+// final set explicitly (e.g. via a Save button). Returns { row, isDirty }.
+// onToggle fires on every tap so the caller can update the Save button state.
+function chipSelectStaged(options, set, labelFn, onToggle) {
   const row = el("div", { class: "flex flex-wrap gap-2" });
   function rebuild() {
     row.innerHTML = "";
@@ -2060,7 +2066,7 @@ function chipSelectAuto(options, set, labelFn, onChange) {
         class: `px-3 py-2 rounded-sm border text-sm ${active ? "border-accent text-accent bg-accent/10" : "border-hairline text-mute"}`,
         onClick: () => {
           if (active) set.delete(opt); else set.add(opt);
-          onChange(set);
+          onToggle && onToggle();
           rebuild();
         }
       }, [labelFn(opt)]));
@@ -2126,11 +2132,48 @@ function openStepperPicker({ subtitle, title, value, min, max, step = 1, suffix,
   openSheet({ subtitle, title, body, onClose: () => render() });
 }
 
-function openChipMultiPicker({ subtitle, title, options, set, labelFn, helper, onChange }) {
+// Multi-select chip sheet with explicit Save / Cancel safety net.
+// `initial` is the committed Set (state). The sheet works on a clone so
+// closing without Save leaves nothing changed. onSave receives the new array.
+function openChipMultiPicker({ subtitle, title, options, initial, labelFn, helper, onSave }) {
+  const draft = new Set(initial);
+  const initialKey = [...initial].sort().join("|");
+  const isDirty = () => [...draft].sort().join("|") !== initialKey;
+
   const body = el("div");
-  body.appendChild(chipSelectAuto(options, set, labelFn, onChange));
-  if (helper) body.appendChild(el("p", { class: "t-meta text-mute mt-3" }, [helper]));
-  openSheet({ subtitle, title, body, onClose: () => render() });
+  const helperLine = helper ? el("p", { class: "t-meta text-mute mt-3" }, [helper]) : null;
+
+  // Footer — Save / Cancel; visible only when there are pending changes.
+  const footer = el("div", { class: "mt-4 grid grid-cols-2 gap-2 hidden" });
+  let sheetRef;
+  function rebuildFooter() {
+    footer.innerHTML = "";
+    if (!isDirty()) { footer.classList.add("hidden"); return; }
+    footer.classList.remove("hidden");
+    footer.appendChild(el("button", {
+      class: "h-12 rounded-sm bg-surface2 text-mute t-body",
+      onClick: () => sheetRef.close({ force: true })   // explicit cancel — discard, no confirm
+    }, ["Cancel"]));
+    footer.appendChild(el("button", {
+      class: "h-12 rounded-sm bg-accent text-accentInk t-body font-semibold",
+      onClick: () => {
+        onSave([...draft]);
+        sheetRef.close({ force: true });
+        render();
+      }
+    }, ["Save changes"]));
+  }
+
+  body.appendChild(chipSelectStaged(options, draft, labelFn, rebuildFooter));
+  if (helperLine) body.appendChild(helperLine);
+  body.appendChild(footer);
+
+  // canClose: when dirty, dismissal via × or backdrop tap requires confirm.
+  // Save and Cancel buttons close via { force: true } so they bypass this guard.
+  sheetRef = openSheet({
+    subtitle, title, body,
+    canClose: () => !isDirty() || confirm("Discard your changes?")
+  });
 }
 
 function openVideoPicksSheet() {
@@ -2277,41 +2320,38 @@ function SettingsScreen() {
     rows: [
       settingsRow({
         label: "Equipment", value: `${eqCount} selected`,
-        onClick: () => {
-          const set = new Set(profile.equipment);
-          openChipMultiPicker({
-            subtitle: "Equipment", title: "What you have access to",
-            options: DEFAULT_EQUIPMENT, set, labelFn: prettyEquipment,
-            onChange: () => { profile.equipment = [...set]; invalidateToday(); saveState(); }
-          });
-        }
+        onClick: () => openChipMultiPicker({
+          subtitle: "Equipment", title: "What you have access to",
+          options: DEFAULT_EQUIPMENT,
+          initial: new Set(profile.equipment),
+          labelFn: prettyEquipment,
+          onSave: arr => { profile.equipment = arr; invalidateToday(); saveState(); }
+        })
       }),
       settingsRow({
         label: "Contraindications", value: `${contraCount} active`,
-        onClick: () => {
-          const set = new Set(profile.contraindications);
-          openChipMultiPicker({
-            subtitle: "Contraindications", title: "Active flags filter the pool silently",
-            options: DEFAULT_CONTRAINDICATIONS, set, labelFn: prettyContra,
-            onChange: () => { profile.contraindications = [...set]; invalidateToday(); saveState(); },
-            helper: "Anything tagged with one of these is suppressed from your plan."
-          });
-        }
+        onClick: () => openChipMultiPicker({
+          subtitle: "Contraindications", title: "Active flags filter the pool silently",
+          options: DEFAULT_CONTRAINDICATIONS,
+          initial: new Set(profile.contraindications),
+          labelFn: prettyContra,
+          onSave: arr => { profile.contraindications = arr; invalidateToday(); saveState(); },
+          helper: "Anything tagged with one of these is suppressed from your plan."
+        })
       }),
       settingsRow({
         label: "Exercise types", value: `${enabledTypesCount} enabled`,
-        onClick: () => {
-          const enabled = new Set(ALL_TYPES.filter(t => !(profile.disabledTypes || []).includes(t)));
-          openChipMultiPicker({
-            subtitle: "Exercise types", title: "Categories you're currently doing",
-            options: ALL_TYPES, set: enabled, labelFn: prettyType,
-            onChange: () => {
-              profile.disabledTypes = ALL_TYPES.filter(t => !enabled.has(t));
-              invalidateToday(); saveState();
-            },
-            helper: "Toggling Cardio off removes all cardio-tagged exercises from your plan."
-          });
-        }
+        onClick: () => openChipMultiPicker({
+          subtitle: "Exercise types", title: "Categories you're currently doing",
+          options: ALL_TYPES,
+          initial: new Set(ALL_TYPES.filter(t => !(profile.disabledTypes || []).includes(t))),
+          labelFn: prettyType,
+          onSave: arr => {
+            profile.disabledTypes = ALL_TYPES.filter(t => !arr.includes(t));
+            invalidateToday(); saveState();
+          },
+          helper: "Toggling Cardio off removes all cardio-tagged exercises from your plan."
+        })
       })
     ],
     helper: "These filter your exercise pool silently."
