@@ -1984,190 +1984,469 @@ function DoneScreen() {
 // Settings — PRD §11 (P0: phase, equipment, contraindications, deload override)
 //-----------------------------------------------------------------------------
 
+// ─── Settings helpers (sheet, row, group) ─────────────────────────────────
+//
+// openSheet({title, subtitle?, body, onClose?}) — generic bottom sheet
+//   used by every Settings picker. Returns { close, sheet } so callers can
+//   replace the body in place (e.g. after a chip toggle re-renders content).
+function openSheet(opts) {
+  const backdrop = el("div", {
+    class: "fixed inset-0 bg-black/60 z-40 flex items-end justify-center fadein",
+    onClick: e => { if (e.target === backdrop) close(); }
+  });
+  const sheet = el("div", {
+    class: "w-full max-w-md bg-card border-t border-hairline rounded-t-md p-5 max-h-[85vh] overflow-y-auto no-scrollbar",
+    style: { paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }
+  });
+  function close() { backdrop.remove(); opts.onClose && opts.onClose(); }
+  const head = el("div", { class: "flex items-start justify-between mb-3 gap-2" }, [
+    el("div", { class: "min-w-0" }, [
+      opts.subtitle ? el("div", { class: "t-micro text-mute" }, [opts.subtitle]) : null,
+      el("h2", { class: "t-body text-ink mt-1 truncate" }, [opts.title])
+    ]),
+    el("button", { class: "text-mute text-xl px-2 -mt-1", onClick: close }, ["×"])
+  ]);
+  sheet.appendChild(head);
+  if (opts.body) sheet.appendChild(opts.body);
+  backdrop.appendChild(sheet);
+  document.body.appendChild(backdrop);
+  return { close, sheet };
+}
+
+const CHEVRON_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block"><path d="M9 6l6 6-6 6"/></svg>';
+
+// settingsRow — tappable label/value/chevron row. Pass interactive=false for read-only.
+function settingsRow({ label, value, onClick, interactive = true, danger = false }) {
+  const node = el(interactive ? "button" : "div", {
+    class: `w-full flex items-center justify-between gap-3 py-3 px-4 ${interactive ? "active:bg-surface2 hover:bg-surface2/60" : ""} ${danger ? "text-danger" : ""}`,
+    onClick: interactive ? onClick : null
+  });
+  node.appendChild(el("span", { class: `t-body ${danger ? "text-danger" : "text-ink"}` }, [label]));
+  const right = el("span", { class: "flex items-center gap-2 shrink-0" });
+  if (value != null) right.appendChild(el("span", { class: `t-body ${danger ? "text-danger/80" : "text-mute"} truncate max-w-[10rem] text-right` }, [String(value)]));
+  if (interactive && !danger) {
+    const chev = el("span", { class: "text-mute" });
+    chev.innerHTML = CHEVRON_SVG;
+    right.appendChild(chev);
+  }
+  node.appendChild(right);
+  return node;
+}
+
+// settingsGroup — grouped card of rows with a t-micro uppercase header and optional helper line below the card.
+function settingsGroup({ title, rows, helper }) {
+  const card = el("div", { class: "bg-card border border-hairline rounded-md overflow-hidden" });
+  rows.filter(Boolean).forEach((r, i) => {
+    if (i > 0) card.appendChild(el("div", { class: "border-t border-hairline mx-4" }));
+    card.appendChild(r);
+  });
+  return el("section", { class: "mb-6" }, [
+    el("h3", { class: "t-micro text-mute mb-2 px-1" }, [title]),
+    card,
+    helper ? el("p", { class: "t-meta text-mute mt-2 px-1" }, [helper]) : null
+  ]);
+}
+
+// chipSelectAuto — like chipSelect but persists every toggle immediately.
+// Returns the row element. The onChange callback receives the current Set
+// after each toggle so the caller can saveState + invalidate cached sessions.
+function chipSelectAuto(options, set, labelFn, onChange) {
+  const row = el("div", { class: "flex flex-wrap gap-2" });
+  function rebuild() {
+    row.innerHTML = "";
+    options.forEach(opt => {
+      const active = set.has(opt);
+      row.appendChild(el("button", {
+        class: `px-3 py-2 rounded-sm border text-sm ${active ? "border-accent text-accent bg-accent/10" : "border-hairline text-mute"}`,
+        onClick: () => {
+          if (active) set.delete(opt); else set.add(opt);
+          onChange(set);
+          rebuild();
+        }
+      }, [labelFn(opt)]));
+    });
+  }
+  rebuild();
+  return row;
+}
+
+// ─── Settings sheets ──────────────────────────────────────────────────────
+
+const PHASE_DESCRIPTIONS = {
+  0: "Preserve & rehab — light + recovery",
+  1: "Rebuild — modified resistance",
+  2: "Recomp — full split"
+};
+
+function invalidateToday() { delete STATE.sessions[sessionIdFor(new Date())]; }
+
+function openPhasePicker() {
+  const body = el("div");
+  [0,1,2].forEach(p => {
+    const active = STATE.profile.phase === p;
+    body.appendChild(el("button", {
+      class: `w-full text-left py-3 px-3 rounded-sm border mb-2 ${active ? "border-accent bg-accent/10" : "border-hairline"}`,
+      onClick: () => {
+        STATE.profile.phase = p;
+        invalidateToday(); saveState(); s.close(); render();
+      }
+    }, [
+      el("div", { class: `t-body ${active ? "text-accent" : "text-ink"}` }, [PHASES[p].short]),
+      el("div", { class: "t-meta text-mute mt-0.5" }, [PHASE_DESCRIPTIONS[p]])
+    ]));
+  });
+  const s = openSheet({ subtitle: "Phase", title: "Pick your current phase", body });
+}
+
+function openRadioPicker({ subtitle, title, options, current, labelFn, onPick, helper }) {
+  const body = el("div");
+  options.forEach(opt => {
+    const active = String(opt) === String(current);
+    body.appendChild(el("button", {
+      class: `w-full text-left py-3 px-3 rounded-sm border mb-2 ${active ? "border-accent bg-accent/10 text-accent" : "border-hairline text-ink"}`,
+      onClick: () => { onPick(opt); s.close(); render(); }
+    }, [labelFn(opt)]));
+  });
+  if (helper) body.appendChild(el("p", { class: "t-meta text-mute mt-2" }, [helper]));
+  const s = openSheet({ subtitle, title, body });
+}
+
+function openStepperPicker({ subtitle, title, value, min, max, step = 1, suffix, onChange, helper }) {
+  const body = el("div");
+  let v = value;
+  const display = el("div", { class: "num text-ink text-center", style: { fontSize: "32px", lineHeight: "1.1" } }, [`${v}${suffix ? " " + suffix : ""}`]);
+  const stepper = el("div", { class: "flex items-center gap-2 bg-surface2 rounded-sm p-1 mt-3" }, [
+    el("button", { class: "w-12 h-12 rounded-sm text-mute text-2xl", onClick: () => { v = Math.max(min, v - step); display.textContent = `${v}${suffix ? " " + suffix : ""}`; onChange(v); } }, ["−"]),
+    el("div", { class: "flex-1" }),
+    el("button", { class: "w-12 h-12 rounded-sm text-mute text-2xl", onClick: () => { v = Math.min(max, v + step); display.textContent = `${v}${suffix ? " " + suffix : ""}`; onChange(v); } }, ["+"])
+  ]);
+  body.appendChild(display);
+  body.appendChild(stepper);
+  if (helper) body.appendChild(el("p", { class: "t-meta text-mute mt-3" }, [helper]));
+  openSheet({ subtitle, title, body, onClose: () => render() });
+}
+
+function openChipMultiPicker({ subtitle, title, options, set, labelFn, helper, onChange }) {
+  const body = el("div");
+  body.appendChild(chipSelectAuto(options, set, labelFn, onChange));
+  if (helper) body.appendChild(el("p", { class: "t-meta text-mute mt-3" }, [helper]));
+  openSheet({ subtitle, title, body, onClose: () => render() });
+}
+
+function openVideoPicksSheet() {
+  const overrides = STATE.videoOverrides || {};
+  const count = Object.keys(overrides).length;
+  const body = el("div");
+  body.appendChild(el("p", { class: "t-meta text-mute mb-3" }, [
+    "Override which video plays for each exercise. Export to back up your picks."
+  ]));
+  body.appendChild(el("div", { class: "t-meta num text-mute mb-3" }, [`${count} pick${count === 1 ? "" : "s"} saved`]));
+  body.appendChild(el("div", { class: "flex gap-2" }, [
+    el("button", {
+      class: "flex-1 h-12 rounded-sm bg-surface2 t-body text-ink",
+      onClick: async () => {
+        const json = JSON.stringify(overrides, null, 2);
+        try { await navigator.clipboard.writeText(json); alert(`Copied ${count} video picks.`); }
+        catch { prompt("Copy this JSON:", json); }
+      }
+    }, ["Copy as JSON"]),
+    count ? el("button", {
+      class: "px-4 h-12 rounded-sm bg-danger/10 text-danger t-body border border-danger/30",
+      onClick: () => {
+        if (!confirm("Clear all your video picks?")) return;
+        STATE.videoOverrides = {}; saveState(); render();
+      }
+    }, ["Clear all"]) : null
+  ]));
+  openSheet({ subtitle: "Video picks", title: "Manage video overrides", body });
+}
+
+function openBackupSheet() {
+  const body = el("div");
+  body.appendChild(el("p", { class: "t-meta text-mute mb-3" }, [
+    "Export everything — profile, sessions, history, video picks — as a JSON blob. Paste it back on any device to restore."
+  ]));
+  body.appendChild(el("div", { class: "flex gap-2" }, [
+    el("button", {
+      class: "flex-1 h-12 rounded-sm bg-surface2 t-body text-ink",
+      onClick: async () => {
+        const blob = JSON.stringify(STATE, null, 2);
+        try { await navigator.clipboard.writeText(blob); alert("Backup copied to clipboard."); }
+        catch { prompt("Copy this JSON:", blob); }
+      }
+    }, ["Export"]),
+    el("button", {
+      class: "flex-1 h-12 rounded-sm bg-surface2 t-body text-ink",
+      onClick: () => {
+        const raw = prompt("Paste a Cadence backup JSON to restore:");
+        if (!raw) return;
+        try {
+          const parsed = JSON.parse(raw);
+          if (!parsed.profile) throw new Error("Missing profile");
+          if (!confirm("Replace all local data with this backup?")) return;
+          STATE = { ...DEFAULT_STATE(), ...parsed };
+          saveState(); render();
+          alert("Restored.");
+        } catch (e) { alert("Couldn't parse backup: " + e.message); }
+      }
+    }, ["Import"])
+  ]));
+  openSheet({ subtitle: "Backup", title: "Export & restore", body });
+}
+
+function openConfirmSheet({ subtitle, title, message, actionLabel, action }) {
+  const body = el("div");
+  body.appendChild(el("p", { class: "t-body text-ink mb-4" }, [message]));
+  body.appendChild(el("div", { class: "flex gap-2" }, [
+    el("button", {
+      class: "flex-1 h-12 rounded-sm bg-surface2 t-body text-mute",
+      onClick: () => s.close()
+    }, ["Cancel"]),
+    el("button", {
+      class: "flex-1 h-12 rounded-sm bg-danger text-accentInk t-body font-semibold",
+      onClick: () => { action(); s.close(); render(); }
+    }, [actionLabel])
+  ]));
+  const s = openSheet({ subtitle, title, body });
+}
+
+// ─── SettingsScreen ───────────────────────────────────────────────────────
+let __settingsAdvancedOpen = false;
+
 function SettingsScreen() {
   const wrap = el("div");
   wrap.appendChild(appBar("Settings", { back: () => navigate("today") }));
 
-  // Phase
-  wrap.appendChild(section("Phase", [
-    el("p", { class: "text-xs text-mute mb-3" }, ["Manual advancement only. Everything downstream changes with this."]),
-    radioGroup(["0","1","2"], String(STATE.profile.phase), v => {
-      STATE.profile.phase = parseInt(v);
-      // Invalidate today's session so it re-generates under the new phase
-      delete STATE.sessions[sessionIdFor(new Date())];
-      saveState(); render();
-    }, p => PHASES[p].short)
-  ]));
-
-  // Mesocycle
-  wrap.appendChild(section("Mesocycle", [
-    el("div", { class: "text-sm text-mute" }, [`Week ${STATE.mesocycle.currentWeek} of 5${isDeloadWeek() ? " · Deload" : ""}`]),
-    el("div", { class: "flex gap-2 mt-3" }, [
-      el("button", { class: "flex-1 py-2 rounded-sm bg-surface2 text-sm", onClick: () => {
-        STATE.mesocycle.startDate = todayISO(); STATE.mesocycle.currentWeek = 1;
-        delete STATE.sessions[sessionIdFor(new Date())];
-        saveState(); render();
-      }}, ["Reset to Week 1"]),
-      el("button", { class: "flex-1 py-2 rounded-sm bg-surface2 text-sm", onClick: () => {
-        const target = isDeloadWeek() ? 1 : 5;
-        const offsetDays = (target - 1) * 7;
-        STATE.mesocycle.startDate = localISO(new Date(Date.now() - offsetDays * 86400000));
-        STATE.mesocycle.currentWeek = target;
-        delete STATE.sessions[sessionIdFor(new Date())];
-        saveState(); render();
-      }}, [isDeloadWeek() ? "Skip deload" : "Force deload"])
-    ])
-  ]));
-
-  // Rest days + day-skew alignment
-  const restList = (STATE.restDays || []).slice().sort().reverse();
-  const restRows = restList.length
-    ? restList.slice(0, 8).map(iso => el("div", { class: "flex items-center justify-between py-1 t-meta" }, [
-        el("span", { class: "num text-ink" }, [new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", weekday: "short" })]),
-        el("button", { class: "text-mute hover:text-ink", onClick: () => {
-          STATE.restDays = (STATE.restDays || []).filter(d => d !== iso);
-          STATE.daySkew = Math.max(0, (STATE.daySkew || 0) - 1);
-          saveState(); render();
-        }}, ["Undo"])
-      ]))
-    : [el("div", { class: "t-meta text-mute" }, ["No rest days marked yet."])];
-
-  wrap.appendChild(section("Rest days & schedule alignment", [
-    el("div", { class: "t-meta text-mute mb-3" }, [
-      `Day-skew: `, el("span", { class: "num text-ink" }, [String(STATE.daySkew || 0)]),
-      ` · ${restList.length} rest ${restList.length === 1 ? "day" : "days"} on record.`
-    ]),
-    ...restRows,
-    restList.length > 8 ? el("div", { class: "t-meta text-mute mt-1" }, [`+${restList.length - 8} more`]) : null,
-    el("div", { class: "flex gap-2 mt-3" }, [
-      el("button", { class: "flex-1 py-2 rounded-sm bg-surface2 t-meta", onClick: () => {
-        if (!confirm("Re-align workout split with the calendar?\n\nThis resets day-skew to 0 — the engine's Mon..Sun mapping will apply again from today.")) return;
-        STATE.daySkew = 0;
-        delete STATE.sessions[sessionIdFor(new Date())];
-        saveState(); render();
-      }}, ["Realign with weekdays"]),
-      restList.length ? el("button", { class: "flex-1 py-2 rounded-sm bg-surface2 t-meta", onClick: () => {
-        if (!confirm("Clear all recorded rest days?")) return;
-        STATE.restDays = [];
-        saveState(); render();
-      }}, ["Clear rest days"]) : null
-    ])
-  ]));
-
-  // Exercise types — multi-tag controlled vocab. Disabling a type
-  // removes anything tagged with it from the planning pool.
+  const profile = STATE.profile;
+  const cardio = !(profile.disabledTypes || []).includes("cardio");
+  const eqCount = (profile.equipment || []).length;
+  const contraCount = (profile.contraindications || []).length;
   const ALL_TYPES = ["strength","mobility","cardio","flexibility","stability","power","rehab","warmup"];
-  const enabledTypes = new Set(ALL_TYPES.filter(t => !(STATE.profile.disabledTypes || []).includes(t)));
-  wrap.appendChild(section("Exercise types I'm doing", [
-    el("p", { class: "text-xs text-mute mb-2" }, ["Tap to toggle. Anything tagged with a disabled type is filtered out of your plan."]),
-    chipSelect(ALL_TYPES, enabledTypes, t => prettyType(t)),
-    el("button", { class: "mt-3 text-xs text-accent", onClick: () => {
-      STATE.profile.disabledTypes = ALL_TYPES.filter(t => !enabledTypes.has(t));
-      delete STATE.sessions[sessionIdFor(new Date())];
-      saveState(); render();
-    }}, ["Save types"])
-  ]));
+  const enabledTypesCount = ALL_TYPES.length - (profile.disabledTypes || []).length;
 
-  // Equipment
-  const eqSet = new Set(STATE.profile.equipment);
-  wrap.appendChild(section("Equipment", [
-    chipSelect(DEFAULT_EQUIPMENT, eqSet, prettyEquipment),
-    el("button", { class: "mt-3 text-xs text-accent", onClick: () => {
-      STATE.profile.equipment = [...eqSet];
-      delete STATE.sessions[sessionIdFor(new Date())];
-      saveState(); render();
-    }}, ["Save equipment"])
-  ]));
+  // ─── TRAINING ─────────────────────────────────────────────
+  wrap.appendChild(settingsGroup({
+    title: "Training",
+    rows: [
+      settingsRow({
+        label: "Phase", value: PHASES[profile.phase].short,
+        onClick: openPhasePicker
+      }),
+      settingsRow({
+        label: "Goal", value: prettyEquipment(profile.goal) + " (for reference)",
+        onClick: () => openRadioPicker({
+          subtitle: "Goal", title: "What you're working toward",
+          options: ["recomp","preserve","rebuild"],
+          current: profile.goal,
+          labelFn: prettyEquipment,
+          onPick: v => { profile.goal = v; saveState(); },
+          helper: "Recorded for context only — the engine doesn't use this directly."
+        })
+      }),
+      settingsRow({
+        label: "Frequency", value: `${profile.frequency} / wk (for reference)`,
+        onClick: () => openStepperPicker({
+          subtitle: "Frequency", title: "Sessions per week",
+          value: profile.frequency, min: 2, max: 7,
+          suffix: "/ wk",
+          onChange: v => { profile.frequency = v; saveState(); },
+          helper: "For reference only — actual day mapping comes from your phase."
+        })
+      }),
+      settingsRow({
+        label: "Session length", value: `${profile.sessionLength} min (for reference)`,
+        onClick: () => openStepperPicker({
+          subtitle: "Session length", title: "Target minutes per session",
+          value: profile.sessionLength, min: 20, max: 90, step: 5,
+          suffix: "min",
+          onChange: v => { profile.sessionLength = v; saveState(); },
+          helper: "For reference only — engine card durations are recipe-driven."
+        })
+      }),
+      settingsRow({
+        label: "Doing cardio", value: cardio ? "Yes" : "No",
+        interactive: false
+      })
+    ],
+    helper: "Phase changes regenerate downstream."
+  }));
 
-  // Contraindications
-  const cSet = new Set(STATE.profile.contraindications);
-  wrap.appendChild(section("Contraindications", [
-    el("p", { class: "text-xs text-mute mb-2" }, ["Active flags filter the exercise pool silently."]),
-    chipSelect(DEFAULT_CONTRAINDICATIONS, cSet, prettyContra),
-    el("button", { class: "mt-3 text-xs text-accent", onClick: () => {
-      STATE.profile.contraindications = [...cSet];
-      delete STATE.sessions[sessionIdFor(new Date())];
-      saveState(); render();
-    }}, ["Save contraindications"])
-  ]));
-
-  // Sync status
-  wrap.appendChild(section("Sync", [
-    el("div", { class: "text-sm text-mute" }, [
-      fbReady ? `Connected · uid ${fbUid?.slice(0,6)}…` : "Local-only (no Firebase config)"
-    ])
-  ]));
-
-  // Video picks export — promote your overrides into the seed
-  const overrides = STATE.videoOverrides || {};
-  const overrideCount = Object.keys(overrides).length;
-  wrap.appendChild(section("Your video picks", [
-    el("p", { class: "text-xs text-mute mb-3" }, [
-      `${overrideCount} ${overrideCount === 1 ? "override" : "overrides"} saved. Export to share with your developer; they'll promote your picks into the seed JSON so they ship as defaults.`
-    ]),
-    el("div", { class: "flex gap-2" }, [
-      el("button", {
-        class: "flex-1 py-2 rounded-sm bg-surface2 text-sm",
-        onClick: async () => {
-          const json = JSON.stringify(overrides, null, 2);
-          try { await navigator.clipboard.writeText(json); alert("Copied " + overrideCount + " video picks to clipboard."); }
-          catch { prompt("Copy this JSON:", json); }
-        }
-      }, ["Copy as JSON"]),
-      overrideCount ? el("button", {
-        class: "px-3 py-2 rounded-sm bg-danger/20 text-danger text-sm",
-        onClick: () => { if (!confirm("Clear all your video picks?")) return; STATE.videoOverrides = {}; saveState(); render(); }
-      }, ["Clear all"]) : null
-    ])
-  ]));
-
-  // Backup / restore — full state as JSON. Useful when switching devices
-  // or when Firestore sync is intentionally off.
-  wrap.appendChild(section("Backup", [
-    el("p", { class: "t-meta text-mute mb-3" }, ["Export all your data (profile, sessions, history, video picks) as a JSON blob. Paste it back on any device to restore."]),
-    el("div", { class: "flex gap-2" }, [
-      el("button", {
-        class: "flex-1 py-2 rounded-sm bg-surface2 t-meta",
-        onClick: async () => {
-          const blob = JSON.stringify(STATE, null, 2);
-          try { await navigator.clipboard.writeText(blob); alert("Backup copied to clipboard."); }
-          catch { prompt("Copy this JSON:", blob); }
-        }
-      }, ["Export to clipboard"]),
-      el("button", {
-        class: "flex-1 py-2 rounded-sm bg-surface2 t-meta",
+  // ─── POOL ─────────────────────────────────────────────────
+  wrap.appendChild(settingsGroup({
+    title: "Pool",
+    rows: [
+      settingsRow({
+        label: "Equipment", value: `${eqCount} selected`,
         onClick: () => {
-          const raw = prompt("Paste a Cadence backup JSON to restore:");
-          if (!raw) return;
-          try {
-            const parsed = JSON.parse(raw);
-            if (!parsed.profile) throw new Error("Missing profile");
-            if (!confirm("Replace all local data with this backup?")) return;
-            STATE = { ...DEFAULT_STATE(), ...parsed };
-            saveState(); render();
-            alert("Restored.");
-          } catch (e) { alert("Couldn't parse backup: " + e.message); }
+          const set = new Set(profile.equipment);
+          openChipMultiPicker({
+            subtitle: "Equipment", title: "What you have access to",
+            options: DEFAULT_EQUIPMENT, set, labelFn: prettyEquipment,
+            onChange: () => { profile.equipment = [...set]; invalidateToday(); saveState(); }
+          });
         }
-      }, ["Import"])
-    ])
-  ]));
+      }),
+      settingsRow({
+        label: "Contraindications", value: `${contraCount} active`,
+        onClick: () => {
+          const set = new Set(profile.contraindications);
+          openChipMultiPicker({
+            subtitle: "Contraindications", title: "Active flags filter the pool silently",
+            options: DEFAULT_CONTRAINDICATIONS, set, labelFn: prettyContra,
+            onChange: () => { profile.contraindications = [...set]; invalidateToday(); saveState(); },
+            helper: "Anything tagged with one of these is suppressed from your plan."
+          });
+        }
+      }),
+      settingsRow({
+        label: "Exercise types", value: `${enabledTypesCount} enabled`,
+        onClick: () => {
+          const enabled = new Set(ALL_TYPES.filter(t => !(profile.disabledTypes || []).includes(t)));
+          openChipMultiPicker({
+            subtitle: "Exercise types", title: "Categories you're currently doing",
+            options: ALL_TYPES, set: enabled, labelFn: prettyType,
+            onChange: () => {
+              profile.disabledTypes = ALL_TYPES.filter(t => !enabled.has(t));
+              invalidateToday(); saveState();
+            },
+            helper: "Toggling Cardio off removes all cardio-tagged exercises from your plan."
+          });
+        }
+      })
+    ],
+    helper: "These filter your exercise pool silently."
+  }));
 
-  // Reset
-  wrap.appendChild(section("Reset", [
-    el("button", { class: "w-full py-2 rounded-sm bg-danger/20 text-danger text-sm", onClick: () => {
-      if (!confirm("Reset all local data?")) return;
-      localStorage.removeItem(LS_KEY); STATE = DEFAULT_STATE(); render();
-    }}, ["Reset local data"])
-  ]));
+  // ─── MESOCYCLE (status only) ──────────────────────────────
+  const restCount = (STATE.restDays || []).length;
+  const skew = STATE.daySkew || 0;
+  const startDateText = new Date(STATE.mesocycle.startDate + "T00:00:00")
+    .toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  const statusBits = [
+    `Started ${startDateText}`,
+    `${restCount} rest day${restCount === 1 ? "" : "s"}`
+  ];
+  if (skew > 0) statusBits.push(`schedule shifted by ${skew} day${skew === 1 ? "" : "s"}`);
+  wrap.appendChild(settingsGroup({
+    title: "Mesocycle",
+    rows: [
+      el("div", { class: "py-3 px-4" }, [
+        el("div", { class: "t-body text-ink" }, [
+          `Week ${STATE.mesocycle.currentWeek} of 5${isDeloadWeek() ? " · Deload" : ""}`
+        ]),
+        el("div", { class: "t-meta text-mute mt-0.5" }, [statusBits.join(" · ")])
+      ])
+    ]
+  }));
+
+  // ─── DATA ─────────────────────────────────────────────────
+  const overridesCount = Object.keys(STATE.videoOverrides || {}).length;
+  wrap.appendChild(settingsGroup({
+    title: "Data",
+    rows: [
+      settingsRow({
+        label: "Sync",
+        value: fbReady && fbUid ? "Connected ✓" : "Local only",
+        interactive: false
+      }),
+      settingsRow({
+        label: "Backup", value: "Export",
+        onClick: openBackupSheet
+      }),
+      settingsRow({
+        label: "Video picks", value: `${overridesCount} saved`,
+        onClick: openVideoPicksSheet
+      })
+    ]
+  }));
+
+  // ─── ADVANCED ─────────────────────────────────────────────
+  const advCard = el("div", { class: "bg-card border border-hairline rounded-md overflow-hidden mb-6" });
+  const advToggle = el("button", {
+    class: "w-full flex items-center justify-between gap-3 py-3 px-4 active:bg-surface2 hover:bg-surface2/60",
+    onClick: () => { __settingsAdvancedOpen = !__settingsAdvancedOpen; render(); }
+  });
+  advToggle.appendChild(el("span", { class: "t-body text-ink" }, ["Advanced"]));
+  const advChev = el("span", { class: "text-mute" });
+  advChev.innerHTML = __settingsAdvancedOpen
+    ? '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'
+    : CHEVRON_SVG;
+  advToggle.appendChild(advChev);
+  advCard.appendChild(advToggle);
+
+  if (__settingsAdvancedOpen) {
+    const advRows = [
+      settingsRow({
+        label: "Realign with weekdays",
+        value: skew > 0 ? `${skew} day${skew === 1 ? "" : "s"} off` : "Aligned",
+        onClick: () => {
+          if (skew === 0) { alert("Schedule is already aligned with weekdays."); return; }
+          openConfirmSheet({
+            subtitle: "Advanced", title: "Realign with weekdays",
+            message: `Reset the day-skew to 0 — the engine's Mon–Sun mapping will apply again from today. Recorded rest days stay in your history.`,
+            actionLabel: "Realign",
+            action: () => {
+              STATE.daySkew = 0;
+              invalidateToday();
+              saveState();
+            }
+          });
+        }
+      }),
+      settingsRow({
+        label: "Reset to Week 1", danger: true,
+        onClick: () => openConfirmSheet({
+          subtitle: "Advanced", title: "Reset mesocycle to Week 1",
+          message: "Restarts the 5-week mesocycle from today. Sessions and history are kept.",
+          actionLabel: "Reset to Week 1",
+          action: () => {
+            STATE.mesocycle.startDate = todayISO();
+            STATE.mesocycle.currentWeek = 1;
+            invalidateToday();
+            saveState();
+          }
+        })
+      }),
+      settingsRow({
+        label: isDeloadWeek() ? "Skip deload" : "Force deload", danger: true,
+        onClick: () => openConfirmSheet({
+          subtitle: "Advanced", title: isDeloadWeek() ? "Skip the current deload" : "Force a deload week",
+          message: isDeloadWeek()
+            ? "Jumps the mesocycle out of the current deload back to Week 1."
+            : "Jumps the mesocycle to Week 5 (deload). Volume × 0.6, load × 0.7 for one week.",
+          actionLabel: isDeloadWeek() ? "Skip deload" : "Force deload",
+          action: () => {
+            const target = isDeloadWeek() ? 1 : 5;
+            const offsetDays = (target - 1) * 7;
+            STATE.mesocycle.startDate = localISO(new Date(Date.now() - offsetDays * 86400000));
+            STATE.mesocycle.currentWeek = target;
+            invalidateToday();
+            saveState();
+          }
+        })
+      }),
+      settingsRow({
+        label: "Reset all data", danger: true,
+        onClick: () => openConfirmSheet({
+          subtitle: "Advanced", title: "Reset all local data",
+          message: "Wipes profile, sessions, history, video picks, and rest days from this device. Firestore copy (if synced) stays — re-launching will pull it back. Use Backup → Export first if you might want this back.",
+          actionLabel: "Reset all data",
+          action: () => {
+            localStorage.removeItem(LS_KEY);
+            STATE = DEFAULT_STATE();
+          }
+        })
+      })
+    ];
+    advRows.forEach((r, i) => {
+      if (i > 0) advCard.appendChild(el("div", { class: "border-t border-hairline mx-4" }));
+      advCard.appendChild(r);
+    });
+  }
+
+  wrap.appendChild(advCard);
 
   return wrap;
-}
-
-function section(title, children) {
-  return el("section", { class: "mb-6" }, [
-    el("h3", { class: "text-mute text-xs uppercase tracking-wide mb-2" }, [title]),
-    el("div", { class: "bg-card border border-hairline rounded-md p-4" }, children)
-  ]);
 }
 
 //-----------------------------------------------------------------------------

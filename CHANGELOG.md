@@ -4,6 +4,13 @@ One human-readable line per meaningful change. Reverse chronological. See `git l
 
 ## 2026-05-08
 
+- **Settings reorganized into 4 groups + Advanced disclosure.** Replaces the prior 10-section monolith. Groups: **Training** (phase, goal, frequency, session length, doing-cardio summary), **Pool** (equipment, contraindications, exercise types), **Mesocycle** (status only), **Data** (sync, backup, video picks). Each Training/Pool row is a tappable label/value/chevron that opens a bottom sheet.
+- **Auto-save everywhere on Settings.** Removed every "Save equipment" / "Save contraindications" / "Save types" button. New `chipSelectAuto` helper persists each toggle immediately and re-renders the chip row in place.
+- **Doing cardio is derived, read-only.** TRAINING row reflects `disabledTypes.includes("cardio")`. Edit happens via the Exercise types row in Pool.
+- **Mesocycle is status-only on Settings.** Two lines: `Week N of 5` + `Started DD Mon · X rest days`. Day-skew folds in as `schedule shifted by N days` when non-zero. Mesocycle action buttons moved to Advanced.
+- **Advanced disclosure (collapsed by default).** Holds Realign-with-weekdays, Reset-to-Week-1, Force-deload, and Reset-all-data. Destructive rows render in danger color and require a confirm bottom sheet (Cancel / Action) before firing.
+- **No more UID exposure.** Sync row shows `Connected ✓` or `Local only`. The `uid xxxxxx…` text is gone.
+- **Video Picks helper rewritten.** Drops "developer / seed JSON" language. New copy: "Override which video plays for each exercise. Export to back up your picks."
 - **Brand mark: dark tile + cyan lifeline.** Both the inline header logo (26×26, rounded square) and the PWA icon (`icon.svg`) now use #0E1218 background with a #22D3EE heartbeat path. Replaces the prior olive-on-paper glyph that didn't read as a brand mark on light backgrounds.
 - **Bumped wordmark in Today header:** "Cadence" wordmark size: 17px t-body → 20px semibold with -0.02em letter-spacing for a more brand-forward feel.
 - **PRD §14b "Design intent" added:** explicitly establishes Cadence as a consumer-grade app, not an instrument panel. Rejects the prior "Garmin / hospital chart" framing as canonical override for any future design contributor. Keeps the §3 non-goals (no streaks, gamification, decorative effects) intact.
