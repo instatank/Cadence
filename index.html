@@ -1242,30 +1242,19 @@ function TodayScreen() {
   }
   wrap.appendChild(card);
 
-  // Tomorrow preview — full card for workouts, single inline line for off/rest.
+  // Tomorrow preview — full card always (workout, off, or rest).
   const tomorrow = new Date(Date.now() + 86400000);
   const tomCard = generateSession(tomorrow);
-  const tomDayShort = tomorrow.toLocaleDateString(undefined, { weekday: "short" });
-  const tomKind = tomCard.meta?.kind;
-  if (tomKind === "off" || tomKind === "rest") {
-    wrap.appendChild(el("div", { class: "mt-6 t-meta text-mute" }, [
-      "NEXT · ",
-      tomDayShort,
-      ", ",
-      tomKind === "rest" ? "rest day" : "off day"
-    ]));
-  } else {
-    wrap.appendChild(el("section", { class: "mt-6" }, [
-      el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Tomorrow"]),
-      el("div", { class: "bg-surface rounded-md p-3 border border-hairline flex items-center justify-between" }, [
-        el("div", {}, [
-          el("div", { class: "font-medium" }, [tomCard.meta?.title || "Off Day"]),
-          el("div", { class: "text-xs text-mute" }, [tomCard.planned.length ? `${tomCard.planned.length} exercises` : "—"])
-        ]),
-        el("span", { class: "text-mute text-xs" }, [tomDayShort])
-      ])
-    ]));
-  }
+  wrap.appendChild(el("section", { class: "mt-6" }, [
+    el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Tomorrow"]),
+    el("div", { class: "bg-surface rounded-md p-3 border border-hairline flex items-center justify-between" }, [
+      el("div", {}, [
+        el("div", { class: "font-medium" }, [tomCard.meta?.title || "Off Day"]),
+        el("div", { class: "text-xs text-mute" }, [tomCard.planned.length ? `${tomCard.planned.length} exercises` : "—"])
+      ]),
+      el("span", { class: "text-mute text-xs" }, [tomorrow.toLocaleDateString(undefined, { weekday: "short" })])
+    ])
+  ]));
 
   // Reserve space so the sticky week strip doesn't cover content
   wrap.appendChild(el("div", { class: "h-24" }));
