@@ -671,8 +671,15 @@ function iconBtn(svg, onClick, opts = {}) {
 function appBar(title, opts = {}) {
   const route = currentRoute().name || "today";
   const onSetup = !STATE.setupDone;
-  const left = el("div", { class: "flex items-center gap-1 w-10" });
-  if (opts.back) left.appendChild(iconBtn(ICONS.back, opts.back, { label: "Back" }));
+  // Left slot: opts.leftContent (raw Node) overrides the default back-button slot.
+  // Width grows to fit when leftContent is provided so the wordmark isn't clipped.
+  const left = el("div", {
+    class: opts.leftContent
+      ? "flex items-center gap-1 shrink-0"
+      : "flex items-center gap-1 w-10"
+  });
+  if (opts.leftContent) left.appendChild(opts.leftContent);
+  else if (opts.back) left.appendChild(iconBtn(ICONS.back, opts.back, { label: "Back" }));
 
   const center = el("div", { class: "flex-1 text-center min-w-0 px-2" }, [
     el("h1", { class: "t-body text-ink truncate" }, [title]),
@@ -1048,8 +1055,18 @@ function TodayScreen() {
   const isCompleted = !!session.completedAt;
   const todayKey = todayISO();
 
-  wrap.appendChild(appBar("Today", {
-    subtitle: PHASES[STATE.profile.phase].short,
+  // Three-anchor header: wordmark · mesocycle indicator · cog.
+  // Mesocycle "day of cycle" is 1..35 within the current 5-week block.
+  const startMs = new Date(STATE.mesocycle.startDate + "T00:00:00").getTime();
+  const daysSinceStart = Math.max(0, Math.floor((Date.now() - startMs) / 86400000));
+  const dayOfMesocycle = (daysSinceStart % 35) + 1;
+  const mesoLabel = el("span", { class: "t-meta text-mute" }, [
+    "Wk ", el("span", { class: "num" }, [String(STATE.mesocycle.currentWeek)]),
+    "/", el("span", { class: "num" }, ["5"]),
+    " · Day ", el("span", { class: "num" }, [String(dayOfMesocycle)])
+  ]);
+  wrap.appendChild(appBar(mesoLabel, {
+    leftContent: el("span", { class: "t-body text-ink", style: { letterSpacing: "-0.01em" } }, ["Cadence"]),
     right: iconBtn(ICONS.cog, () => navigate("settings"), { label: "Settings" })
   }));
 
@@ -1164,7 +1181,15 @@ function TodayScreen() {
       el("div", { class: "flex items-center gap-2 flex-wrap" }, [
         el("span", { class: "t-meta text-mute" }, [`${dayName} · ${PHASES[STATE.profile.phase].short}`]),
         session.deload ? pill("Deload week", "warn") : null,
-        overrideActive ? pill("Custom pick", "accent") : null
+        // Custom-pick pill is its own inverse: tap (anywhere on the pill) clears the override.
+        overrideActive ? el("button", {
+          class: "pill pill-accent inline-flex items-center gap-1.5 hover:bg-accent/5",
+          "aria-label": "Clear custom workout override",
+          onClick: () => { setTodayCardType(null); render(); }
+        }, [
+          "Custom pick",
+          el("span", { class: "text-base leading-none -mr-0.5", "aria-hidden": "true" }, ["×"])
+        ]) : null
       ]),
       el("h2", { class: "t-display text-ink" }, [meta.title]),
       el("div", { class: "t-meta text-mute" }, [
@@ -1206,19 +1231,30 @@ function TodayScreen() {
   }
   wrap.appendChild(card);
 
-  // Tomorrow preview
+  // Tomorrow preview — full card for workouts, single inline line for off/rest.
   const tomorrow = new Date(Date.now() + 86400000);
   const tomCard = generateSession(tomorrow);
-  wrap.appendChild(el("section", { class: "mt-6" }, [
-    el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Tomorrow"]),
-    el("div", { class: "bg-surface rounded-md p-3 border border-hairline flex items-center justify-between" }, [
-      el("div", {}, [
-        el("div", { class: "font-medium" }, [tomCard.meta?.title || "Off Day"]),
-        el("div", { class: "text-xs text-mute" }, [tomCard.planned.length ? `${tomCard.planned.length} exercises` : "—"])
-      ]),
-      el("span", { class: "text-mute text-xs" }, [new Date(Date.now()+86400000).toLocaleDateString(undefined, { weekday:"short" })])
-    ])
-  ]));
+  const tomDayShort = tomorrow.toLocaleDateString(undefined, { weekday: "short" });
+  const tomKind = tomCard.meta?.kind;
+  if (tomKind === "off" || tomKind === "rest") {
+    wrap.appendChild(el("div", { class: "mt-6 t-meta text-mute" }, [
+      "NEXT · ",
+      tomDayShort,
+      ", ",
+      tomKind === "rest" ? "rest day" : "off day"
+    ]));
+  } else {
+    wrap.appendChild(el("section", { class: "mt-6" }, [
+      el("h3", { class: "text-mute text-sm uppercase tracking-wide mb-2" }, ["Tomorrow"]),
+      el("div", { class: "bg-surface rounded-md p-3 border border-hairline flex items-center justify-between" }, [
+        el("div", {}, [
+          el("div", { class: "font-medium" }, [tomCard.meta?.title || "Off Day"]),
+          el("div", { class: "text-xs text-mute" }, [tomCard.planned.length ? `${tomCard.planned.length} exercises` : "—"])
+        ]),
+        el("span", { class: "text-mute text-xs" }, [tomDayShort])
+      ])
+    ]));
+  }
 
   // Reserve space so the sticky week strip doesn't cover content
   wrap.appendChild(el("div", { class: "h-24" }));
@@ -1268,14 +1304,22 @@ function weekStrip() {
     const isRest = meta?.kind === "rest";
     const completed = !!session?.completedAt;
 
-    const dotKlass = completed ? "bg-ok" : isRest ? "bg-warn" : isOff ? "bg-dim" : "bg-accent";
+    // Three states (today's surrounding box stays unchanged):
+    //   DONE       → filled accent
+    //   SCHEDULED  → outlined accent (transparent fill)
+    //   REST/OFF   → hollow hairline border
+    let dotKlass, dotLabel;
+    if (completed)            { dotKlass = "bg-accent border border-accent";  dotLabel = "Done"; }
+    else if (isRest || isOff) { dotKlass = "bg-transparent border border-hairline"; dotLabel = isRest ? "Rest" : "Off"; }
+    else                      { dotKlass = "bg-transparent border border-accent"; dotLabel = "Scheduled"; }
+
     const btn = el("button", {
       class: `flex flex-col items-center justify-center py-2 rounded-sm ${isToday ? "bg-surface2 ring-1 ring-accent/40" : "hover:bg-surface2"}`,
       onClick: () => openDayPreview(d)
     }, [
       el("div", { class: `text-xs ${isToday ? "text-accent" : "text-mute"} font-medium` }, [d.toLocaleDateString(undefined, { weekday: "short" })[0]]),
       el("div", { class: `text-sm ${isToday ? "text-ink" : "text-mute"}` }, [String(d.getDate())]),
-      el("div", { class: `mt-1 w-1.5 h-1.5 rounded-full ${dotKlass}`, "aria-label": isRest ? "Rest" : isOff ? "Off" : "Planned" })
+      el("div", { class: `mt-1 w-2 h-2 rounded-full ${dotKlass}`, "aria-label": dotLabel })
     ]);
     row.appendChild(btn);
   });
