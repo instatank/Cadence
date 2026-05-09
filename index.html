@@ -1407,7 +1407,7 @@ function SessionScreen() {
         el("div", { class: "flex flex-wrap gap-1.5" }, completedExercises.map((p, i) => {
           const skipped = !!p.skipped;
           const pillCls = skipped
-            ? "inline-flex items-center gap-1.5 py-1 pl-1.5 pr-2.5 rounded-sm bg-surface2 text-mute t-meta"
+            ? "inline-flex items-center gap-1.5 py-1 pl-1.5 pr-2.5 rounded-sm bg-warn/5 text-warn t-meta border border-warn/40"
             : "inline-flex items-center gap-1.5 py-1 pl-1.5 pr-2.5 rounded-sm bg-ok/10 text-ok t-meta border border-ok/30";
           const mark = skipped ? "↷" : "✓";
           return el("span", { class: pillCls, title: setsLabel(p) }, [
