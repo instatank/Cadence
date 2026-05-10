@@ -53,7 +53,7 @@ const RELATED_CATEGORIES = {
   yoga_asana: ["recovery_mobility"], scap_postural: ["physio_specific"], physio_specific: ["recovery_mobility"]
 };
 const FULL_EQUIP = new Set(["adjustable_dumbbells","barbell_plates","adjustable_bench","pull_up_bar","resistance_bands","cable_machine","foam_roller","yoga_mat","bodyweight"]);
-const DEFAULT_CONTRA = ["right_anterior_shoulder","right_medial_ankle"];
+const DEFAULT_CONTRA = ["right_anterior_shoulder","right_ankle_insertional_loading"];
 const DEFAULT_DISABLED_TYPES = ["cardio"];
 
 const fatigueRank = (ex) => ({ high: 3, medium: 2, low: 1 })[ex.fatigue_cost] || 1;

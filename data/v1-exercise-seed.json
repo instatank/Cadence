@@ -5,7 +5,7 @@
     "total_count": 117,
     "contraindication_tag_legend": {
       "right_anterior_shoulder": "Filter when user has right anterior shoulder issue (pressing, loaded pulls, front-round)",
-      "right_medial_ankle": "Filter when user has right medial ankle issue (heavy bilateral loading, aggressive dorsiflexion)"
+      "right_ankle_insertional_loading": "Right insertional Achilles tendinosis + plantar fasciitis: avoid loaded dorsiflexion past neutral, no high-impact running/jumping, no stair/incline walking under load. Eccentric calf work flat surface only (NOT off step — compresses the inflamed insertion)."
     },
     "equipment_codes": [
       "adjustable_dumbbells",
@@ -18,7 +18,7 @@
       "yoga_mat",
       "bodyweight"
     ],
-    "changelog": "v2: Added cue field (one-line form note), video fields (video_url, video_source, video_duration_sec), new categories (mobility_movement, yoga_asana), McGill curl-up, TKE band; v2.1: Added modality field (reps|time|rounds); fixed [1,1] placeholders for yoga/holds/foam-roll with real ranges; added 9 new core/ab + warmup drills (crunch, bicycle crunch, lying leg raise, reverse crunch, side-lying leg raise, flutter kicks, mountain climbers, toe touches, heel touches). v2.2: Added exercise_types[] multi-tag (controlled vocab: strength, mobility, cardio, flexibility, stability, power, rehab, warmup). Tagged all 112 prior exercises by category + targeted overrides. Added 5 cardio entries (Jumping Jacks, High Knees, Butt Kicks, Jump Rope, Burpees) — gated to Phase 2 with both relevant contraindication tags; user-disabled by default until cardio is enabled in Settings. v2.3: Fixed rep_ranges for bw_side_plank, bw_hollow_hold, band_iso_tib_post (modality=time but values were still in rep counts). Filled equipment_required for physio_contrast_bath.",
+    "changelog": "v2: Added cue field (one-line form note), video fields (video_url, video_source, video_duration_sec), new categories (mobility_movement, yoga_asana), McGill curl-up, TKE band; v2.1: Added modality field (reps|time|rounds); fixed [1,1] placeholders for yoga/holds/foam-roll with real ranges; added 9 new core/ab + warmup drills (crunch, bicycle crunch, lying leg raise, reverse crunch, side-lying leg raise, flutter kicks, mountain climbers, toe touches, heel touches). v2.2: Added exercise_types[] multi-tag (controlled vocab: strength, mobility, cardio, flexibility, stability, power, rehab, warmup). Tagged all 112 prior exercises by category + targeted overrides. Added 5 cardio entries (Jumping Jacks, High Knees, Butt Kicks, Jump Rope, Burpees) — gated to Phase 2 with both relevant contraindication tags; user-disabled by default until cardio is enabled in Settings. v2.3: Fixed rep_ranges for bw_side_plank, bw_hollow_hold, band_iso_tib_post (modality=time but values were still in rep counts). Filled equipment_required for physio_contrast_bath. v2.4-pre: Renamed right_medial_ankle → right_ankle_insertional_loading per orthopedic re-eval (insertional Achilles tendinosis + plantar fasciitis).",
     "video_field_notes": "video_url null = pending. Populate in priority order: Phase 0 first (~55 exercises), then Phase 1, then Phase 2.",
     "video_population_status": "Batches 1-2 complete: 19 unfamiliar/high-priority exercises (KOT mobility, Strength Side, McGill, TKE, calf rehab, hip CARs, basic yoga). 3 yoga (Triangle, Std/Seated Forward Fold) deferred to Batch 3 with resistance staples.",
     "modality_legend": {
@@ -336,7 +336,7 @@
         "ankle_dorsiflexion_loaded"
       ],
       "contraindication_tags": [
-        "right_medial_ankle"
+        "right_ankle_insertional_loading"
       ],
       "phase_eligibility": [
         1,
@@ -2714,7 +2714,7 @@
         "loaded_calf"
       ],
       "contraindication_tags": [
-        "right_medial_ankle"
+        "right_ankle_insertional_loading"
       ],
       "phase_eligibility": [
         1,
@@ -2761,7 +2761,7 @@
         "loaded_calf"
       ],
       "contraindication_tags": [
-        "right_medial_ankle"
+        "right_ankle_insertional_loading"
       ],
       "phase_eligibility": [
         1,
@@ -5536,7 +5536,7 @@
         "plyometric"
       ],
       "contraindication_tags": [
-        "right_medial_ankle"
+        "right_ankle_insertional_loading"
       ],
       "phase_eligibility": [
         2
@@ -5580,7 +5580,7 @@
         "plyometric"
       ],
       "contraindication_tags": [
-        "right_medial_ankle"
+        "right_ankle_insertional_loading"
       ],
       "phase_eligibility": [
         2
@@ -5623,7 +5623,7 @@
         "plyometric"
       ],
       "contraindication_tags": [
-        "right_medial_ankle"
+        "right_ankle_insertional_loading"
       ],
       "phase_eligibility": [
         2
@@ -5668,7 +5668,7 @@
         "ankle_dorsiflexion_loaded"
       ],
       "contraindication_tags": [
-        "right_medial_ankle"
+        "right_ankle_insertional_loading"
       ],
       "phase_eligibility": [
         2
@@ -5714,7 +5714,7 @@
       ],
       "contraindication_tags": [
         "right_anterior_shoulder",
-        "right_medial_ankle"
+        "right_ankle_insertional_loading"
       ],
       "phase_eligibility": [
         2

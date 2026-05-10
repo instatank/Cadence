@@ -71,7 +71,7 @@ const RELATED_CATEGORIES = {
   physio_specific: ["recovery_mobility"]
 };
 
-const DEFAULT_CONTRA = ["right_anterior_shoulder", "right_medial_ankle"];
+const DEFAULT_CONTRA = ["right_anterior_shoulder", "right_ankle_insertional_loading"];
 const DEFAULT_DISABLED_TYPES = ["cardio"];
 const DEFAULT_EQUIPMENT = new Set([
   "adjustable_dumbbells","barbell_plates","adjustable_bench","pull_up_bar",

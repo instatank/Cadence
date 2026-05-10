@@ -204,7 +204,7 @@ const RECOVERY_BLOCK = [
   { id: "_rec_ice",      name: "Ice / contrast: shoulder + ankle",  durationMin: 10, kind: "recovery" }
 ];
 
-const DEFAULT_CONTRAINDICATIONS = ["right_anterior_shoulder", "right_medial_ankle"];
+const DEFAULT_CONTRAINDICATIONS = ["right_anterior_shoulder", "right_ankle_insertional_loading"];
 const DEFAULT_EQUIPMENT = ["adjustable_dumbbells","barbell_plates","adjustable_bench","pull_up_bar","resistance_bands","cable_machine","foam_roller","yoga_mat","bodyweight"];
 
 // When a recipe slot can't be filled (often because contraindications wiped the
@@ -927,7 +927,7 @@ const prettyType = (t) => ({
 
 const prettyContra = (c) => ({
   right_anterior_shoulder: "Right anterior shoulder",
-  right_medial_ankle: "Right medial ankle"
+  right_ankle_insertional_loading: "Right ankle (Achilles + plantar fascia)"
 }[c] || c);
 
 // Reference links — user override beats seed video_url beats search fallback.

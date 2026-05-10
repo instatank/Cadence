@@ -42,7 +42,7 @@ for (const ex of seed.exercises) {
 // 8. Coverage sanity: every (category, phase) should have at least one usable exercise (no contraindication, full equipment).
 const cats = [...new Set(seed.exercises.map(e => e.category))];
 const FULL_EQUIP = new Set(["adjustable_dumbbells","barbell_plates","adjustable_bench","pull_up_bar","resistance_bands","cable_machine","foam_roller","yoga_mat","bodyweight"]);
-const DEFAULT_CONTRA = ["right_anterior_shoulder","right_medial_ankle"];
+const DEFAULT_CONTRA = ["right_anterior_shoulder","right_ankle_insertional_loading"];
 for (const cat of cats) {
   for (const phase of [0,1,2]) {
     const usable = seed.exercises.filter(e =>
