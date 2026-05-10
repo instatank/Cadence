@@ -2,6 +2,16 @@
 
 One human-readable line per meaningful change. Reverse chronological. See `git log` for the details.
 
+## 2026-05-10
+
+- **Seed v2.4 — clinical update.** Renamed `right_medial_ankle` → `right_ankle_insertional_loading` to match the actual orthopedic diagnosis (insertional Achilles tendinosis + plantar fasciitis, Fortis Institute). Settings label now reads "Right ankle (Achilles + plantar fascia)".
+- **Deprecated 2 physio entries** (`physio_eccentric_tib_post`, `physio_neural_floss_tibial`) — based on superseded tarsal-tunnel hypothesis. Records stay in the seed for history; engine filters them at generation.
+- **Added 5 ankle entries** (insertional Achilles + plantar fasciitis protocol): flat-surface eccentric heel raise, gastroc + soleus stretches, plantar fascia ball release, seated plantar stretch.
+- **Added 5 shoulder active-loading entries** (Kuhn 2009 subacromial protocol): full-can scaption, doorway pec stretch (progressive), sleeper stretch, side-lying external rotation, prone horizontal abduction. Phase 0 eligible. Don't override the existing right-anterior-shoulder contraindication on bench/OHP/dips/loaded-pulls — those stay suppressed.
+- **Engine: `deprecated:true` filter.** Exercises flagged deprecated never enter the selection pool. One-line predicate added to `filterPool()` in `index.html` + the two dev scripts. `audit-seed.js` skips deprecated entries during schema validation.
+- **Settings: stale-clinical-data nudge.** When `_meta.last_clinical_update` is more than 90 days old, Settings shows a quiet inline note near the top: "Consider a clinical re-evaluation to update contraindications. Last update: DD Mon YYYY." Session-scoped Dismiss button. Never blocks anything.
+- Schema bumped to v2.4. Firestore seeder gate bumped 2.3 → 2.4 so existing devices re-seed. SW cache v21 → v22.
+
 ## 2026-05-08
 
 - **Settings reorganized into 4 groups + Advanced disclosure.** Replaces the prior 10-section monolith. Groups: **Training** (phase, goal, frequency, session length, doing-cardio summary), **Pool** (equipment, contraindications, exercise types), **Mesocycle** (status only), **Data** (sync, backup, video picks). Each Training/Pool row is a tappable label/value/chevron that opens a bottom sheet.
