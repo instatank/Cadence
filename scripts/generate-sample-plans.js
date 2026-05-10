@@ -93,6 +93,7 @@ function recentSet(cardType, n) {
 function filterPool(phase, cardType, allowRecent = false) {
   const recent = allowRecent ? new Set() : recentSet(cardType, 2);
   return EXERCISES.filter(ex => {
+    if (ex.deprecated) return false;
     if (!ex.phase_eligibility?.includes(phase)) return false;
     if (!ex.equipment_required?.every(e => DEFAULT_EQUIPMENT.has(e))) return false;
     if (ex.contraindication_tags?.some(t => DEFAULT_CONTRA.includes(t))) return false;

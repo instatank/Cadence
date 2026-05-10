@@ -261,17 +261,19 @@ async function initFirebase() {
 //-----------------------------------------------------------------------------
 
 let EXERCISES = []; // canonical in-memory pool
+let SEED_META = {}; // captured from seed _meta at boot — version, last_clinical_update, etc.
 
 async function loadExerciseSeed() {
   const res = await fetch("/data/v1-exercise-seed.json", { cache: "force-cache" });
   const json = await res.json();
+  SEED_META = json._meta || {};
   return json.exercises || [];
 }
 
 async function seedFirestoreIfNeeded(seed) {
   if (!fbReady) return;
   const meta = await getDoc(doc(fbDb, "system", "seed"));
-  if (meta.exists() && meta.data().version === "2.3") return;
+  if (meta.exists() && meta.data().version === "2.4") return;
   // Batch write all exercises
   const chunks = [];
   for (let i = 0; i < seed.length; i += 400) chunks.push(seed.slice(i, i + 400));
@@ -280,7 +282,7 @@ async function seedFirestoreIfNeeded(seed) {
     chunk.forEach(ex => batch.set(doc(fbDb, "exercises", ex.id), ex));
     await batch.commit();
   }
-  await setDoc(doc(fbDb, "system", "seed"), { version: "2.3", seededAt: serverTimestamp(), count: seed.length });
+  await setDoc(doc(fbDb, "system", "seed"), { version: "2.4", seededAt: serverTimestamp(), count: seed.length });
   console.info(`[Cadence] Seeded ${seed.length} exercises to Firestore.`);
 }
 
@@ -406,6 +408,8 @@ function filterPool(cardType, opts = {}) {
   const recentlyUsed = opts.allowRecent ? new Set() : recentExerciseIds(cardType, 2);
 
   return EXERCISES.filter(ex => {
+    // Deprecated entries stay in the seed for history but never enter selection.
+    if (ex.deprecated) return false;
     if (!ex.phase_eligibility?.includes(phase)) return false;
     if (!ex.equipment_required?.every(e => equip.has(e))) return false;
     if (ex.contraindication_tags?.some(t => contras.has(t))) return false;
@@ -2255,10 +2259,32 @@ function openConfirmSheet({ subtitle, title, message, actionLabel, action }) {
 
 // ─── SettingsScreen ───────────────────────────────────────────────────────
 let __settingsAdvancedOpen = false;
+let __settingsStaleDismissed = false; // session-scoped dismiss; resets on reload
 
 function SettingsScreen() {
   const wrap = el("div");
   wrap.appendChild(appBar("Settings", { back: () => navigate("today") }));
+
+  // Stale-clinical-data nudge — informational only, never blocks anything.
+  // Triggers when last_clinical_update is more than 90 days behind today.
+  // Dismissable for the session (not persistent across launches).
+  const lastClin = SEED_META.last_clinical_update;
+  if (lastClin && !__settingsStaleDismissed) {
+    const ageDays = Math.floor((Date.now() - new Date(lastClin + "T00:00:00").getTime()) / 86400000);
+    if (ageDays > 90) {
+      const formatted = new Date(lastClin + "T00:00:00")
+        .toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+      wrap.appendChild(el("div", { class: "mb-4 px-1 flex items-start justify-between gap-2" }, [
+        el("p", { class: "t-meta text-mute" }, [
+          `Consider a clinical re-evaluation to update contraindications. Last update: ${formatted}.`
+        ]),
+        el("button", {
+          class: "t-meta text-mute shrink-0",
+          onClick: () => { __settingsStaleDismissed = true; render(); }
+        }, ["Dismiss"])
+      ]));
+    }
+  }
 
   const profile = STATE.profile;
   const cardio = !(profile.disabledTypes || []).includes("cardio");

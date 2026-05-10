@@ -10,6 +10,9 @@ const VALID_TYPES = new Set(["strength","mobility","cardio","flexibility","stabi
 const VALID_MODS = new Set(["reps","time","rounds"]);
 
 for (const ex of seed.exercises) {
+  // Deprecated entries stay in the seed (history) but skip schema audit
+  // since we don't enforce ongoing schema compliance on them.
+  if (ex.deprecated) continue;
   // 1. Every phase the exercise is eligible for must have a rep_range entry.
   for (const phase of ex.phase_eligibility || []) {
     const k = `phase_${phase}`;
