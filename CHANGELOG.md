@@ -4,6 +4,9 @@ One human-readable line per meaningful change. Reverse chronological. See `git l
 
 ## 2026-05-10
 
+- **Settings: full contraindication labels.** `prettyContra` map now reads `"Right anterior shoulder (subacromial impingement / rotator cuff)"` and `"Right ankle (insertional Achilles tendinosis + plantar fasciitis)"` — the chips inside the Pool → Contraindications sheet show the diagnosis-specific label, not the short tag.
+- **Settings: new "Clinical context" group (read-only).** Sits between Pool and Mesocycle. Surfaces `_meta.last_clinical_update` (formatted as "10 May 2026"), plus per-diagnosis blocks (condition, findings, status, source) for shoulder + ankle from `_meta.diagnoses_basis`. Schema-tolerant — renders any additional diagnosis keys (e.g. knee) automatically. Helper text: "Read-only — what the engine is using to filter your exercise pool."
+- **Stale-data nudge relocated** into the Clinical context group as its first row when triggered (>90 days since last update). Was previously orphaned at the very top of Settings; now lives next to the data it's about. Session-scoped Dismiss button preserved.
 - **Seed v2.4 — clinical update.** Renamed `right_medial_ankle` → `right_ankle_insertional_loading` to match the actual orthopedic diagnosis (insertional Achilles tendinosis + plantar fasciitis, Fortis Institute). Settings label now reads "Right ankle (Achilles + plantar fascia)".
 - **Deprecated 2 physio entries** (`physio_eccentric_tib_post`, `physio_neural_floss_tibial`) — based on superseded tarsal-tunnel hypothesis. Records stay in the seed for history; engine filters them at generation.
 - **Added 5 ankle entries** (insertional Achilles + plantar fasciitis protocol): flat-surface eccentric heel raise, gastroc + soleus stretches, plantar fascia ball release, seated plantar stretch.

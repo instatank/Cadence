@@ -929,9 +929,11 @@ const prettyType = (t) => ({
   rehab: "Rehab", warmup: "Warm-up"
 }[t] || t);
 
+// Tag → display label. Single source of truth for human-readable
+// contraindication strings. Never expose raw tag names to the user.
 const prettyContra = (c) => ({
-  right_anterior_shoulder: "Right anterior shoulder",
-  right_ankle_insertional_loading: "Right ankle (Achilles + plantar fascia)"
+  right_anterior_shoulder: "Right anterior shoulder (subacromial impingement / rotator cuff)",
+  right_ankle_insertional_loading: "Right ankle (insertional Achilles tendinosis + plantar fasciitis)"
 }[c] || c);
 
 // Reference links — user override beats seed video_url beats search fallback.
@@ -2265,27 +2267,6 @@ function SettingsScreen() {
   const wrap = el("div");
   wrap.appendChild(appBar("Settings", { back: () => navigate("today") }));
 
-  // Stale-clinical-data nudge — informational only, never blocks anything.
-  // Triggers when last_clinical_update is more than 90 days behind today.
-  // Dismissable for the session (not persistent across launches).
-  const lastClin = SEED_META.last_clinical_update;
-  if (lastClin && !__settingsStaleDismissed) {
-    const ageDays = Math.floor((Date.now() - new Date(lastClin + "T00:00:00").getTime()) / 86400000);
-    if (ageDays > 90) {
-      const formatted = new Date(lastClin + "T00:00:00")
-        .toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-      wrap.appendChild(el("div", { class: "mb-4 px-1 flex items-start justify-between gap-2" }, [
-        el("p", { class: "t-meta text-mute" }, [
-          `Consider a clinical re-evaluation to update contraindications. Last update: ${formatted}.`
-        ]),
-        el("button", {
-          class: "t-meta text-mute shrink-0",
-          onClick: () => { __settingsStaleDismissed = true; render(); }
-        }, ["Dismiss"])
-      ]));
-    }
-  }
-
   const profile = STATE.profile;
   const cardio = !(profile.disabledTypes || []).includes("cardio");
   const eqCount = (profile.equipment || []).length;
@@ -2382,6 +2363,75 @@ function SettingsScreen() {
     ],
     helper: "These filter your exercise pool silently."
   }));
+
+  // ─── CLINICAL CONTEXT (read-only) ─────────────────────────
+  // Displays whatever the seed _meta carries: last clinical update,
+  // shoulder + ankle diagnoses, source clinics, status. The stale-data
+  // nudge sits inside this group so the related info stays clustered.
+  const lastClin = SEED_META.last_clinical_update;
+  const dx = SEED_META.diagnoses_basis || {};
+  if (lastClin || Object.keys(dx).length) {
+    const fmtDate = iso => new Date(iso + "T00:00:00")
+      .toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
+
+    const clinicalRows = [];
+
+    // Stale nudge first — only when > 90 days old and not session-dismissed.
+    if (lastClin && !__settingsStaleDismissed) {
+      const ageDays = Math.floor((Date.now() - new Date(lastClin + "T00:00:00").getTime()) / 86400000);
+      if (ageDays > 90) {
+        clinicalRows.push(el("div", { class: "py-3 px-4 flex items-start justify-between gap-2" }, [
+          el("p", { class: "t-meta text-mute" }, [
+            "Consider a clinical re-evaluation. The data on this screen is over 90 days old."
+          ]),
+          el("button", {
+            class: "t-meta text-mute shrink-0",
+            onClick: () => { __settingsStaleDismissed = true; render(); }
+          }, ["Dismiss"])
+        ]));
+      }
+    }
+
+    // Last update
+    if (lastClin) {
+      clinicalRows.push(el("div", { class: "py-3 px-4 flex items-center justify-between gap-3" }, [
+        el("span", { class: "t-body text-ink" }, ["Last update"]),
+        el("span", { class: "t-body text-mute num" }, [fmtDate(lastClin)])
+      ]));
+    }
+
+    // One block per diagnosis. Schema-tolerant: render whatever fields exist.
+    function diagnosisBlock(label, d) {
+      if (!d) return null;
+      const rows = [el("div", { class: "t-body text-ink" }, [label])];
+      // Field order: condition → findings → status → source. Anything else
+      // unknown gets rendered after, so the block adapts if the schema grows.
+      const ORDER = ["condition", "findings", "status", "source"];
+      const seen = new Set();
+      for (const k of ORDER) {
+        if (d[k]) { rows.push(el("div", { class: "t-meta text-mute" }, [d[k]])); seen.add(k); }
+      }
+      for (const [k, v] of Object.entries(d)) {
+        if (seen.has(k) || typeof v !== "string") continue;
+        rows.push(el("div", { class: "t-meta text-mute" }, [`${k}: ${v}`]));
+      }
+      return el("div", { class: "py-3 px-4 space-y-1" }, rows);
+    }
+    if (dx.shoulder) clinicalRows.push(diagnosisBlock("Shoulder", dx.shoulder));
+    if (dx.ankle) clinicalRows.push(diagnosisBlock("Ankle", dx.ankle));
+    // Render any other diagnosis keys that show up later (e.g. dx.knee).
+    for (const [k, d] of Object.entries(dx)) {
+      if (k === "shoulder" || k === "ankle") continue;
+      const label = k.charAt(0).toUpperCase() + k.slice(1);
+      clinicalRows.push(diagnosisBlock(label, d));
+    }
+
+    wrap.appendChild(settingsGroup({
+      title: "Clinical context",
+      rows: clinicalRows.filter(Boolean),
+      helper: "Read-only — what the engine is using to filter your exercise pool."
+    }));
+  }
 
   // ─── MESOCYCLE (status only) ──────────────────────────────
   const restCount = (STATE.restDays || []).length;
