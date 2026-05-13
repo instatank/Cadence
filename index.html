@@ -1282,8 +1282,11 @@ function TodayScreen() {
     ])
   ]));
 
-  // Reserve space so the sticky week strip doesn't cover content
-  wrap.appendChild(el("div", { class: "h-24" }));
+  // Reserve space so the sticky week strip doesn't cover content.
+  // Strip is taller now: nav row (‹ › + label + optional "← Today") +
+  // day pills row + safe-area inset. 144px (h-36) clears it with a
+  // small visual gap below the Tomorrow card.
+  wrap.appendChild(el("div", { class: "h-36" }));
 
   // Sticky week strip — tap a day to preview its plan
   wrap.appendChild(weekStrip());
