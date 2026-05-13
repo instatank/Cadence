@@ -2,6 +2,11 @@
 
 One human-readable line per meaningful change. Reverse chronological. See `git log` for the details.
 
+## 2026-05-13
+
+- **Bugfix:** day-preview sheet now shows what you actually did on past completed days, not a regenerated plan. The engine's rotation filter excludes recently-used exercises, so calling `generateSession(Monday)` on Wednesday (with Tuesday's exercises now "recent") would produce a *different* workout than the one you ran. Fix: `openDayPreview()` reads the saved session from `STATE.sessions["s_<iso>"]` whenever it exists with `completedAt` set, falling back to a fresh `generateSession()` only for future days.
+- **Day-preview sheet enriched for historical days:** a "Logged" pill next to the date, header subtitle shows total sets logged + duration, each exercise row shows the actual logged kg×reps (e.g. `10@50kg · 10@50kg · 8@50kg`), and skipped exercises render as "Skipped." Recovery-block rows get a ✓ for completed blocks plus a count footer. Primary action becomes "Close" on past days (no "Do this today" since rotation would pick different exercises anyway).
+
 ## 2026-05-10
 
 - **Settings: full contraindication labels.** `prettyContra` map now reads `"Right anterior shoulder (subacromial impingement / rotator cuff)"` and `"Right ankle (insertional Achilles tendinosis + plantar fasciitis)"` — the chips inside the Pool → Contraindications sheet show the diagnosis-specific label, not the short tag.

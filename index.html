@@ -1335,9 +1335,19 @@ function weekStrip() {
 }
 
 function openDayPreview(date) {
-  const preview = generateSession(date);
+  const iso = localISO(date);
+  // For past days the user actually completed, show the SAVED session (what
+  // they did, with logged kg/reps), not a fresh regeneration. The engine's
+  // rotation filter changes day-to-day, so regenerating a past day produces
+  // a different plan than what they ran.
+  const saved = STATE.sessions["s_" + iso];
+  const isHistorical = !!(saved && saved.completedAt);
+  const preview = isHistorical ? saved : generateSession(date);
   const meta = preview.meta || CARD_META[preview.cardType];
   const dayLabel = date.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+  const completedSetCount = isHistorical
+    ? (preview.planned || []).reduce((n, p) => n + (p.sets || []).filter(s => s.completed).length, 0)
+    : null;
 
   // Backdrop
   const backdrop = el("div", {
@@ -1353,10 +1363,15 @@ function openDayPreview(date) {
 
   sheet.appendChild(el("div", { class: "flex items-start justify-between mb-3" }, [
     el("div", {}, [
-      el("div", { class: "text-mute text-xs uppercase tracking-wide" }, [dayLabel]),
-      el("h2", { class: "text-2xl font-semibold tracking-tight" }, [meta?.title || "Off Day"]),
-      meta?.kind !== "off" ? el("div", { class: "text-mute text-sm mt-1" }, [
-        `~${meta.duration} min · ${preview.planned.length} exercises · ${preview.planned.reduce((n,p)=>n+p.sets.length,0)} sets`
+      el("div", { class: "flex items-center gap-2 flex-wrap" }, [
+        el("span", { class: "text-mute text-xs uppercase tracking-wide" }, [dayLabel]),
+        isHistorical ? pill("Logged", "accent") : null
+      ]),
+      el("h2", { class: "text-2xl font-semibold tracking-tight mt-1" }, [meta?.title || "Off Day"]),
+      meta?.kind !== "off" && meta?.kind !== "rest" ? el("div", { class: "text-mute text-sm mt-1" }, [
+        isHistorical
+          ? `${completedSetCount} sets logged${preview.durationActual ? ` · ${preview.durationActual} min` : ""}`
+          : `~${meta.duration} min · ${preview.planned.length} exercises · ${preview.planned.reduce((n,p)=>n+p.sets.length,0)} sets`
       ]) : null,
       preview.deload ? pill("Deload week", "warn") : null
     ]),
@@ -1370,32 +1385,69 @@ function openDayPreview(date) {
   } else {
     const list = el("ol", { class: "space-y-2 mt-2" });
     preview.planned.forEach((p, i) => {
+      // For historical sessions: show the actual completed sets with their
+      // logged values. For future/today plans: show the prescription.
+      let detailNode;
+      if (isHistorical) {
+        const completedSets = (p.sets || []).filter(s => s.completed);
+        if (p.skipped || completedSets.length === 0) {
+          detailNode = el("div", { class: "text-xs text-mute mt-1" }, [p.skipped ? "Skipped" : "Not logged"]);
+        } else {
+          const detail = completedSets.map(s => {
+            const reps = s.reps != null ? s.reps : "—";
+            if (p.modality === "time") return `${reps}s`;
+            if (p.modality === "rounds") return `${reps}r`;
+            const load = s.load != null ? `@${s.load}kg` : "";
+            return `${reps}${load}`;
+          }).join(" · ");
+          detailNode = el("div", { class: "text-xs num text-mute mt-1 truncate" }, [detail]);
+        }
+      } else {
+        detailNode = p.cue ? el("div", { class: "text-xs text-mute mt-1" }, [p.cue]) : null;
+      }
       list.appendChild(el("li", { class: "py-2 px-3 bg-surface rounded-sm border border-hairline" }, [
         el("div", { class: "flex justify-between items-baseline gap-2" }, [
           el("div", { class: "font-medium" }, [`${i+1}. ${p.name}`]),
-          el("div", { class: "text-xs text-mute whitespace-nowrap" }, [setsLabel(p)])
+          el("div", { class: "text-xs text-mute whitespace-nowrap" }, [
+            isHistorical
+              ? `${(p.sets || []).filter(s => s.completed).length}/${p.sets.length} sets`
+              : setsLabel(p)
+          ])
         ]),
-        p.cue ? el("div", { class: "text-xs text-mute mt-1" }, [p.cue]) : null
+        detailNode
       ]));
     });
     sheet.appendChild(list);
 
     if (preview.recovery?.length) {
+      const recDone = preview.recovery.filter(r => r.completed).length;
       sheet.appendChild(el("div", { class: "mt-4 pt-3 border-t border-hairline" }, [
         el("div", { class: "text-mute text-xs uppercase tracking-wide mb-2" }, ["Recovery block"]),
-        ...preview.recovery.map(r => el("div", { class: "text-sm py-1" }, [`• ${r.name} · ${r.durationMin} min`]))
+        ...preview.recovery.map(r => el("div", { class: "text-sm py-1" }, [
+          isHistorical
+            ? `${r.completed ? "✓" : "·"} ${r.name} · ${r.durationMin} min`
+            : `• ${r.name} · ${r.durationMin} min`
+        ])),
+        isHistorical ? el("div", { class: "t-meta text-mute mt-1" }, [`${recDone}/${preview.recovery.length} complete`]) : null
       ]));
     }
 
-    const isToday = localISO(date) === todayISO();
+    const isToday = iso === todayISO();
     if (isToday) {
       sheet.appendChild(el("button", {
         class: "w-full mt-5 py-3 rounded-md bg-accent text-accentInk font-medium",
         onClick: () => { backdrop.remove(); navigate("today"); }
       }, ["Go to today"]));
+    } else if (isHistorical) {
+      // For past completed days, primary action is "Close" — no point offering
+      // to do the same workout today since the rotation will pick a different
+      // set of exercises anyway.
+      sheet.appendChild(el("button", {
+        class: "w-full mt-5 h-12 rounded-sm bg-surface2 text-mute t-body",
+        onClick: () => backdrop.remove()
+      }, ["Close"]));
     } else {
-      // Allow "Do this workout today" for any day's preview — pulls that day's
-      // card type to today as an override.
+      // Future days — allow "Do this workout today" override.
       sheet.appendChild(el("button", {
         class: "w-full mt-5 h-12 rounded-sm bg-accent text-accentInk font-semibold text-[17px] tracking-tight",
         onClick: () => { setTodayCardType(preview.cardType); backdrop.remove(); navigate("today"); }
