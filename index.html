@@ -1304,20 +1304,54 @@ function startOfWeek(date) {
   return d;
 }
 
+// Module-scope offset for the week strip — 0 = current week, ±N = ±N weeks.
+// Resets to 0 on each fresh render of Today (TodayScreen sets it back).
+let __weekStripOffset = 0;
+
 function weekStrip() {
   const todayKey = todayISO();
-  const monday = startOfWeek(new Date());
+  // Anchor: Monday of the week the user is currently viewing.
+  const todayMonday = startOfWeek(new Date());
+  const monday = new Date(todayMonday);
+  monday.setDate(todayMonday.getDate() + __weekStripOffset * 7);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
   const days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday); d.setDate(monday.getDate() + i); return d;
   });
+  const isCurrentWeek = __weekStripOffset === 0;
+  const weekLabel = isCurrentWeek
+    ? "This week"
+    : `${monday.toLocaleDateString(undefined, { day: "numeric", month: "short" })} – ${sunday.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`;
 
   const bar = el("nav", {
     class: "fixed bottom-0 left-0 right-0 bg-bg/95 backdrop-blur border-t border-hairline",
     style: { paddingBottom: "env(safe-area-inset-bottom)" }
   });
   const inner = el("div", { class: "max-w-md mx-auto px-3 py-2" });
-  const label = el("div", { class: "text-mute text-[10px] uppercase tracking-wide mb-1 text-center" }, ["This week"]);
-  inner.appendChild(label);
+
+  // Navigation row: ‹ label › with optional "Today" snap-back link.
+  const navRow = el("div", { class: "flex items-center justify-between mb-1" });
+  const prevBtn = el("button", {
+    class: "text-mute hover:text-ink px-3 py-0.5 text-[14px] leading-none",
+    "aria-label": "Previous week",
+    onClick: () => { __weekStripOffset -= 1; render(); }
+  }, ["‹"]);
+  const nextBtn = el("button", {
+    class: "text-mute hover:text-ink px-3 py-0.5 text-[14px] leading-none",
+    "aria-label": "Next week",
+    onClick: () => { __weekStripOffset += 1; render(); }
+  }, ["›"]);
+  const labelText = el("div", { class: "flex-1 text-center" }, [
+    el("div", { class: "text-mute text-[10px] uppercase tracking-wide" }, [weekLabel]),
+    !isCurrentWeek ? el("button", {
+      class: "text-accent text-[10px] uppercase tracking-wide",
+      onClick: () => { __weekStripOffset = 0; render(); }
+    }, ["← Today"]) : null
+  ]);
+  navRow.appendChild(prevBtn);
+  navRow.appendChild(labelText);
+  navRow.appendChild(nextBtn);
+  inner.appendChild(navRow);
 
   const row = el("div", { class: "grid grid-cols-7 gap-1" });
   days.forEach(d => {
