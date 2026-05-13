@@ -390,12 +390,15 @@ const isDeloadWeek = () => STATE.mesocycle.currentWeek === 5;
 function dayCardType(date = new Date()) {
   const phase = STATE.profile.phase;
   const dow = date.getDay();
-  // Apply daySkew (positive = shift forward)
   const skew = STATE.daySkew || 0;
-  const effective = ((dow - 1 + skew) % 7 + 7) % 7 + 1; // re-bias so Mon=1
+  // Skew "carries forward" — a skew of N means today's lookup pulls from
+  // the slot that was scheduled N days ago. So if Wed (dow=3) was the
+  // posterior_scap day and the user tapped Rest Today there (skew→1),
+  // Thursday (dow=4) reads map[(4 - 1) mod 7] = map[3] = posterior_scap.
+  // Subtract, not add. The mod-then-+7-mod pattern keeps the result
+  // non-negative for any positive skew value.
+  const realDow = ((dow - skew) % 7 + 7) % 7;
   const map = DAY_TABLE[phase];
-  // map keys are 0..6; we re-assemble using the skewed dow
-  const realDow = (dow + skew) % 7;
   return map[realDow] || "off";
 }
 

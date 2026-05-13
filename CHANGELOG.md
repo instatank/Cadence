@@ -4,6 +4,7 @@ One human-readable line per meaningful change. Reverse chronological. See `git l
 
 ## 2026-05-13
 
+- **Bugfix:** `dayCardType()` had `daySkew` going the wrong direction. The formula was `(dow + skew) % 7` — that made tomorrow's lookup pull from the day *after* tomorrow, so tapping Rest Today on Wed (Posterior + Scap) made Thursday show Friday's plan (Light Lower + Push) and cascaded the off-days onto Fri/Sat. Fixed to `((dow - skew) % 7 + 7) % 7` — tomorrow now correctly reads the slot that was scheduled today, so today's plan carries forward as designed.
 - **Bugfix:** day-preview sheet now shows what you actually did on past completed days, not a regenerated plan. The engine's rotation filter excludes recently-used exercises, so calling `generateSession(Monday)` on Wednesday (with Tuesday's exercises now "recent") would produce a *different* workout than the one you ran. Fix: `openDayPreview()` reads the saved session from `STATE.sessions["s_<iso>"]` whenever it exists with `completedAt` set, falling back to a fresh `generateSession()` only for future days.
 - **Day-preview sheet enriched for historical days:** a "Logged" pill next to the date, header subtitle shows total sets logged + duration, each exercise row shows the actual logged kg×reps (e.g. `10@50kg · 10@50kg · 8@50kg`), and skipped exercises render as "Skipped." Recovery-block rows get a ✓ for completed blocks plus a count footer. Primary action becomes "Close" on past days (no "Do this today" since rotation would pick different exercises anyway).
 
