@@ -312,7 +312,8 @@ const DEFAULT_STATE = () => ({
     disabledTypes: ["cardio"]
   },
   mesocycle: { startDate: todayISO(), currentWeek: 1 }, // week 1..5; 5 = deload
-  daySkew: 0, // increments on "Rest today" — shifts planned split forward
+  daySkew: 0, // legacy lifetime counter of Rest-today taps; the live schedule
+              // shift is derived per-week from STATE.restDays via effectiveSkewFor()
   restDays: [], // ISO dates the user has tagged as rest
   todayOverride: null, // { date: ISO, cardType: "lower" } — manual override for today's plan
   sessions: {}, // sessionId → session record (also synced)
@@ -387,16 +388,32 @@ const isDeloadWeek = () => STATE.mesocycle.currentWeek === 5;
 // THE ENGINE — PRD §8
 //-----------------------------------------------------------------------------
 
+// Effective skew is scoped to the calendar week (Mon..Sun) the date
+// falls in. Counts rest days in that same week that are ≤ the date.
+// Crossing into the next Monday auto-resets the skew to 0, so a rest
+// day mid-week shifts the rest of THIS week but doesn't bleed into
+// the next week's schedule.
+function effectiveSkewFor(date) {
+  const restSet = STATE.restDays || [];
+  if (!restSet.length) return 0;
+  const wkStart = startOfWeek(date);
+  const wkEnd = new Date(wkStart); wkEnd.setDate(wkStart.getDate() + 6);
+  const fromISO = localISO(wkStart);
+  const toISO   = localISO(wkEnd);
+  const dateISO = localISO(date);
+  return restSet.filter(d => d >= fromISO && d <= toISO && d <= dateISO).length;
+}
+
 function dayCardType(date = new Date()) {
   const phase = STATE.profile.phase;
   const dow = date.getDay();
-  const skew = STATE.daySkew || 0;
-  // Skew "carries forward" — a skew of N means today's lookup pulls from
-  // the slot that was scheduled N days ago. So if Wed (dow=3) was the
-  // posterior_scap day and the user tapped Rest Today there (skew→1),
-  // Thursday (dow=4) reads map[(4 - 1) mod 7] = map[3] = posterior_scap.
-  // Subtract, not add. The mod-then-+7-mod pattern keeps the result
-  // non-negative for any positive skew value.
+  // Skew "carries forward" within the current calendar week. A skew of N
+  // means today's lookup pulls from the slot that was scheduled N days
+  // ago. So if Wed (dow=3) is the posterior_scap day and the user tapped
+  // Rest Today there, Thursday (dow=4) reads map[(4 - 1) mod 7] =
+  // map[3] = posterior_scap. Next Monday the skew has reset to 0 because
+  // last week's rest day is no longer in this week's window.
+  const skew = effectiveSkewFor(date);
   const realDow = ((dow - skew) % 7 + 7) % 7;
   const map = DAY_TABLE[phase];
   return map[realDow] || "off";
@@ -2490,14 +2507,14 @@ function SettingsScreen() {
 
   // ─── MESOCYCLE (status only) ──────────────────────────────
   const restCount = (STATE.restDays || []).length;
-  const skew = STATE.daySkew || 0;
+  const thisWeekSkew = effectiveSkewFor(new Date());
   const startDateText = new Date(STATE.mesocycle.startDate + "T00:00:00")
     .toLocaleDateString(undefined, { day: "numeric", month: "short" });
   const statusBits = [
     `Started ${startDateText}`,
-    `${restCount} rest day${restCount === 1 ? "" : "s"}`
+    `${restCount} rest day${restCount === 1 ? "" : "s"} logged`
   ];
-  if (skew > 0) statusBits.push(`schedule shifted by ${skew} day${skew === 1 ? "" : "s"}`);
+  if (thisWeekSkew > 0) statusBits.push(`this week shifted by ${thisWeekSkew} day${thisWeekSkew === 1 ? "" : "s"}`);
   wrap.appendChild(settingsGroup({
     title: "Mesocycle",
     rows: [
@@ -2549,15 +2566,22 @@ function SettingsScreen() {
     const advRows = [
       settingsRow({
         label: "Realign with weekdays",
-        value: skew > 0 ? `${skew} day${skew === 1 ? "" : "s"} off` : "Aligned",
+        value: thisWeekSkew > 0 ? `${thisWeekSkew} day${thisWeekSkew === 1 ? "" : "s"} shifted` : "Aligned",
         onClick: () => {
-          if (skew === 0) { alert("Schedule is already aligned with weekdays."); return; }
+          if (thisWeekSkew === 0) { alert("This week's schedule is already aligned with weekdays."); return; }
           openConfirmSheet({
             subtitle: "Advanced", title: "Realign with weekdays",
-            message: `Reset the day-skew to 0 — the engine's Mon–Sun mapping will apply again from today. Recorded rest days stay in your history.`,
+            message: `Clear this week's rest-day tags so the Mon–Sun mapping applies again from today. Rest days from earlier weeks stay in your history. Past completed sessions are not affected.`,
             actionLabel: "Realign",
             action: () => {
-              STATE.daySkew = 0;
+              // Clear only the current calendar week's rest days. Past weeks
+              // stay as history. Next week is unaffected (it was already
+              // aligned via the per-week skew model).
+              const wkStart = startOfWeek(new Date());
+              const wkEnd = new Date(wkStart); wkEnd.setDate(wkStart.getDate() + 6);
+              const fromISO = localISO(wkStart);
+              const toISO = localISO(wkEnd);
+              STATE.restDays = (STATE.restDays || []).filter(d => d < fromISO || d > toISO);
               invalidateToday();
               saveState();
             }
