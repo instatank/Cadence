@@ -2,6 +2,11 @@
 
 One human-readable line per meaningful change. Reverse chronological. See `git log` for the details.
 
+## 2026-05-15
+
+- **Settings → Mesocycle is editable.** New "Current week" row in the Mesocycle group opens a picker sheet listing Week 1–5 (with one-line context for each, deload tagged). Tap any week to re-anchor `mesocycle.startDate` so today lands on day 1 of that week. Use case: you missed Week 2, app auto-advanced you to Week 3 on Monday — just tap "Week 2" to roll back and pick up where you left off. Or tap "Week 4" if you're feeling ahead of schedule.
+- Mesocycle group's old static status block split into a tappable "Current week" row + a quieter sub-line for "Started DD Mon · X rest days logged". Helper line below the card: "Tap to jump to a different week — useful if you missed time or want to repeat."
+
 ## 2026-05-13
 
 - **Week strip now scrolls.** Added ‹ / › arrows on either side of the bottom week strip's "This week" label. Tap left to step backward through past weeks (shows your logged completions), tap right to step forward through future weeks (shows engine predictions). Off-current-week strips display the date range "11 May – 17 May" and a small "← Today" link to snap back. The day-preview sheet works on any week — past days show what you did, future days show what's planned.

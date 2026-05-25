@@ -2219,6 +2219,45 @@ function openPhasePicker() {
   const s = openSheet({ subtitle: "Phase", title: "Pick your current phase", body });
 }
 
+// Jump to any week 1..5 of the mesocycle. Re-anchors mesocycle.startDate
+// so that today falls on day 1 of the picked week. Schedule (day-of-week
+// mapping) is unaffected; only the week counter, deload trigger, and load
+// prescription (during week 5) shift.
+const WEEK_DESCRIPTIONS = {
+  1: "Week 1 — fresh start",
+  2: "Week 2 — building",
+  3: "Week 3 — building",
+  4: "Week 4 — peak volume",
+  5: "Week 5 — Deload (volume × 0.6, load × 0.7)"
+};
+
+function openWeekPicker() {
+  const body = el("div");
+  body.appendChild(el("p", { class: "t-meta text-mute mb-3" }, [
+    "Pick the week of the mesocycle you want today to land on. Useful if you missed a week and want to repeat it, or jumped ahead and need to back off."
+  ]));
+  [1,2,3,4,5].forEach(w => {
+    const active = STATE.mesocycle.currentWeek === w;
+    body.appendChild(el("button", {
+      class: `w-full text-left py-3 px-3 rounded-sm border mb-2 ${active ? "border-accent bg-accent/10" : "border-hairline"}`,
+      onClick: () => {
+        // startDate = today − (w−1)*7 days puts today on day 1 of week w.
+        const offsetDays = (w - 1) * 7;
+        STATE.mesocycle.startDate = localISO(new Date(Date.now() - offsetDays * 86400000));
+        STATE.mesocycle.currentWeek = w;
+        invalidateToday();
+        saveState();
+        s.close();
+        render();
+      }
+    }, [
+      el("div", { class: `t-body ${active ? "text-accent" : "text-ink"}` }, [`Week ${w}${w === 5 ? " — Deload" : ""}`]),
+      el("div", { class: "t-meta text-mute mt-0.5" }, [WEEK_DESCRIPTIONS[w]])
+    ]));
+  });
+  const s = openSheet({ subtitle: "Mesocycle", title: "Pick the current week", body });
+}
+
 function openRadioPicker({ subtitle, title, options, current, labelFn, onPick, helper }) {
   const body = el("div");
   options.forEach(opt => {
@@ -2555,13 +2594,16 @@ function SettingsScreen() {
   wrap.appendChild(settingsGroup({
     title: "Mesocycle",
     rows: [
+      settingsRow({
+        label: "Current week",
+        value: `Week ${STATE.mesocycle.currentWeek} of 5${isDeloadWeek() ? " · Deload" : ""}`,
+        onClick: openWeekPicker
+      }),
       el("div", { class: "py-3 px-4" }, [
-        el("div", { class: "t-body text-ink" }, [
-          `Week ${STATE.mesocycle.currentWeek} of 5${isDeloadWeek() ? " · Deload" : ""}`
-        ]),
-        el("div", { class: "t-meta text-mute mt-0.5" }, [statusBits.join(" · ")])
+        el("div", { class: "t-meta text-mute" }, [statusBits.join(" · ")])
       ])
-    ]
+    ],
+    helper: "Tap to jump to a different week — useful if you missed time or want to repeat."
   }));
 
   // ─── DATA ─────────────────────────────────────────────────
