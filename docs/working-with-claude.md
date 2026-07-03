@@ -1,5 +1,7 @@
 # Working with Claude on Cadence
 
+> **Note (2026-07-03):** Global working rules now live in the shared playbook (see `CLAUDE.md` → `instatank/time-tracker` `playbook/PLAYBOOK.md`); this doc keeps the Cadence-specific practices. Where a section below states a global lesson (don't trust agent self-report, no bundled changes, the session onboarding ritual), the playbook is the source of truth.
+
 This is the operating manual for sessions where Claude (or another LLM agent) is making changes to this repo. Pin it. Paste relevant sections at the start of new sessions.
 
 The goal: reduce the round-trips and rework that come from implicit assumptions, and keep humans-on-the-phone-testing as a hard gate before anything is "done."
